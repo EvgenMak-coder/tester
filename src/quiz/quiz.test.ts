@@ -62,18 +62,22 @@ describe('формат курса', () => {
     expect(ids.sort()).toEqual(['linux', 'linux-demo'])
   })
 
-  it('курс Linux собирается из папки: модули идут по порядку файлов, в готовых модулях по 10 вопросов на уровень', () => {
+  it('курс Linux собирается из папки: модули идут по порядку файлов, в каждом есть все три уровня', () => {
     const linux = catalog.find((entry) => entry.source === 'linux')!.result
     if (!linux.ok) throw new Error(linux.errors.join('; '))
-    expect(linux.course.topics.map((t) => t.id)).toEqual(['shell', 'files', 'permissions', 'text', 'processes', 'users', 'packages', 'storage', 'network', 'ssh', 'systemd'])
-    // «Сеть» пока написана только на базовом уровне
-    for (const topic of linux.course.topics.filter((t) => t.id !== 'network')) {
+    expect(linux.course.topics.map((t) => t.id)).toEqual([
+      'shell', 'files', 'permissions', 'text', 'processes', 'users', 'packages', 'storage', 'network', 'ssh',
+      'systemd', 'boot', 'logs', 'bash', 'automation', 'security', 'performance', 'containers', 'services',
+    ])
+    for (const topic of linux.course.topics) {
       const levels = topic.questions.map(levelOf)
-      expect([topic.id, ...['basic', 'intermediate', 'advanced'].map((l) => levels.filter((x) => x === l).length)]).toEqual([topic.id, 10, 10, 10])
+      // в «Сети» базовый уровень написан первым и содержит 25 вопросов
+      const basic = topic.id === 'network' ? 25 : 10
+      expect([topic.id, ...['basic', 'intermediate', 'advanced'].map((l) => levels.filter((x) => x === l).length)]).toEqual([topic.id, basic, 10, 10])
       expect(topic.description).toBeTruthy()
       expect(topic.icon).toBeTruthy()
     }
-    expect(levelCounts(linux.course)).toEqual({ basic: 125, intermediate: 100, advanced: 100 })
+    expect(levelCounts(linux.course)).toEqual({ basic: 205, intermediate: 190, advanced: 190 })
   })
 
   it('верный ответ в готовых модулях не стоит всё время на одном месте и не выделяется длиной', () => {
