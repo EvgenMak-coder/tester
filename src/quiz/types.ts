@@ -1,0 +1,128 @@
+export type Level = 'basic' | 'intermediate' | 'advanced'
+
+export const LEVELS: Level[] = ['basic', 'intermediate', 'advanced']
+
+export const LEVEL_TITLES: Record<Level, string> = {
+  basic: 'Базовый',
+  intermediate: 'Средний',
+  advanced: 'Продвинутый',
+}
+
+/** Вопрос с одним правильным ответом. `answer` — индекс в исходном порядке `options`. */
+export interface SingleQuestion {
+  id: string
+  type: 'single'
+  text: string
+  code?: string
+  options: string[]
+  answer: number
+  explanation?: string
+  /** false — варианты показываются в порядке файла */
+  shuffle?: boolean
+  /** нет поля — базовый уровень */
+  level?: Level
+}
+
+/** Новые типы (multi, input, card) добавляются сюда отдельными интерфейсами. */
+export type Question = SingleQuestion
+
+export function levelOf(question: Question): Level {
+  return question.level ?? 'basic'
+}
+
+export interface Topic {
+  id: string
+  title: string
+  questions: Question[]
+}
+
+/** Содержимое файла курса после проверки. */
+export interface CourseFile {
+  id: string
+  title: string
+  description?: string
+  topics: Topic[]
+}
+
+export interface Course extends CourseFile {
+  importedAt: string
+}
+
+/** Дата без времени в местном поясе: YYYY-MM-DD. */
+export type Day = string
+
+export interface QuestionProgress {
+  seen: number
+  correct: number
+  wrong: number
+  lastCorrect: boolean
+  /** коробка Лейтнера, 1..5 */
+  box: number
+  due: Day
+}
+
+export type Mode = 'practice' | 'mistakes' | 'review' | 'exam'
+
+export interface SessionItem {
+  topicId: string
+  questionId: string
+  /** исходные индексы вариантов в том порядке, в котором они показаны */
+  order: number[]
+  /** исходный индекс выбранного варианта */
+  picked: number | null
+}
+
+export interface Session {
+  id: string
+  courseId: string
+  mode: Mode
+  startedAt: string
+  finishedAt?: string
+  items: SessionItem[]
+  current: number
+  /** только для экзамена */
+  timeLimitSec?: number
+  /** уровень, выбранный при запуске; нет поля — все уровни */
+  level?: Level
+}
+
+export interface Attempt {
+  id: string
+  courseId: string
+  mode: Mode
+  finishedAt: string
+  total: number
+  correct: number
+  durationSec: number
+  level?: Level
+}
+
+export type CourseProgress = Record<string, QuestionProgress>
+
+export interface Progress {
+  /** courseId → questionId → прогресс */
+  questions: Record<string, CourseProgress>
+  attempts: Attempt[]
+  session: Session | null
+  lastResult: Session | null
+}
+
+export interface Snapshot {
+  courses: Course[]
+  progress: Progress
+}
+
+export function emptyProgress(): Progress {
+  return { questions: {}, attempts: [], session: null, lastResult: null }
+}
+
+export function emptySnapshot(): Snapshot {
+  return { courses: [], progress: emptyProgress() }
+}
+
+export const MODE_TITLES: Record<Mode, string> = {
+  practice: 'Тренировка',
+  mistakes: 'Работа над ошибками',
+  review: 'Повторение',
+  exam: 'Экзамен',
+}
