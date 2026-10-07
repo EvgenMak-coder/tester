@@ -20,13 +20,17 @@ export function setupUpdates(): void {
   })
 }
 
-/** Ручной сброс: забыть сохранённую копию сайта и загрузить свежую. Курсы и прогресс не затрагивает. */
+/**
+ * Ручной сброс: забыть сохранённую копию сайта и загрузить свежую. Курсы и прогресс не затрагивает.
+ * На github.io все проекты аккаунта живут на одном адресе, поэтому трогаем только то, что относится к этой папке.
+ */
 export async function forceRefresh(): Promise<void> {
+  const scope = new URL('./', location.href).href
   try {
     const registrations = (await navigator.serviceWorker?.getRegistrations()) ?? []
-    await Promise.all(registrations.map((r) => r.unregister()))
+    await Promise.all(registrations.filter((r) => r.scope === scope).map((r) => r.unregister()))
     const keys = await caches.keys()
-    await Promise.all(keys.map((k) => caches.delete(k)))
+    await Promise.all(keys.filter((k) => k.endsWith(scope)).map((k) => caches.delete(k)))
   } finally {
     location.reload()
   }
