@@ -138,7 +138,8 @@ describe('формат курса', () => {
     const linux = catalog.find((entry) => entry.source === 'linux')!.result
     if (!linux.ok) throw new Error(linux.errors.join('; '))
     const written = linux.course.topics.filter((t) => Object.values(t.theory ?? {}).some((lesson) => lesson.text))
-    expect(written.map((t) => t.id)).toEqual(['shell', 'files', 'permissions', 'text', 'processes', 'users', 'packages', 'storage', 'network', 'ssh', 'systemd', 'boot', 'logs', 'bash'])
+    // теория написана для всех модулей курса
+    expect(written.map((t) => t.id)).toEqual(linux.course.topics.map((t) => t.id))
     for (const topic of written) {
       for (const level of ['basic', 'intermediate', 'advanced'] as const) {
         const text = topic.theory?.[level]?.text ?? ''
