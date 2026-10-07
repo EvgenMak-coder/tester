@@ -1039,6 +1039,8 @@ pre.code {
 
 .prose {
   max-width: 72ch;
+  /* длинные пути и команды в строке переносятся, а не растягивают страницу */
+  overflow-wrap: anywhere;
 }
 
 .prose h2,

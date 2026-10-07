@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseMarkdown } from '../app/markdown'
+import { parseMarkdown, splitInline } from '../app/markdown'
 import demoText from '../../courses/linux-demo.json?raw'
 import { assembleCatalog, isOutdated } from '../features/import/builtin'
 import { finishSession, importCourse, readBackup, submitAnswer } from '../data/actions'
@@ -138,7 +138,7 @@ describe('формат курса', () => {
     const linux = catalog.find((entry) => entry.source === 'linux')!.result
     if (!linux.ok) throw new Error(linux.errors.join('; '))
     const written = linux.course.topics.filter((t) => Object.values(t.theory ?? {}).some((lesson) => lesson.text))
-    expect(written.map((t) => t.id)).toEqual(['shell', 'files', 'permissions', 'text', 'processes', 'users', 'packages', 'storage', 'network', 'ssh'])
+    expect(written.map((t) => t.id)).toEqual(['shell', 'files', 'permissions', 'text', 'processes', 'users', 'packages', 'storage', 'network', 'ssh', 'systemd', 'boot', 'logs', 'bash'])
     for (const topic of written) {
       for (const level of ['basic', 'intermediate', 'advanced'] as const) {
         const text = topic.theory?.[level]?.text ?? ''
@@ -148,7 +148,8 @@ describe('формат курса', () => {
         expect([where, blocks[blocks.length - 1].kind]).toEqual([where, 'list'])
         // вне блоков кода не должно остаться разметки, которой приложение не знает
         const prose = blocks.flatMap((b) => (b.kind === 'code' ? [] : b.kind === 'list' ? b.items : [b.text]))
-        const odd = prose.filter((line) => /\]\(|^\||^#{1,6}\s|^\s*[-*]\s/.test(line) || (line.match(/`/g) ?? []).length % 2 === 1 || (line.match(/\*\*/g) ?? []).length % 2 === 1)
+        // …и после разбора строки в обычном тексте и полужирном не должно остаться служебных знаков
+        const odd = prose.filter((line) => /\]\(|^\||^#{1,6}\s|^\s*[-*]\s/.test(line) || splitInline(line).some((span) => span.kind !== 'code' && /`|\*\*/.test(span.text)))
         expect([where, odd]).toEqual([where, []])
         expect([where, (text.match(/^```/gm) ?? []).length % 2]).toEqual([where, 0])
       }
