@@ -21,6 +21,8 @@ export default defineConfig({
       // регистрацию и проверку обновлений делает src/pwa.ts
       injectRegister: false,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      // при своей регистрации плагин это не включает, и новая версия ждала бы, пока приложение закроют целиком
+      workbox: { skipWaiting: true, clientsClaim: true },
       manifest: {
         name: 'Tester',
         short_name: 'Tester',
