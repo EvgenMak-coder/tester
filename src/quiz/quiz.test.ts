@@ -65,14 +65,15 @@ describe('формат курса', () => {
   it('курс Linux собирается из папки: модули идут по порядку файлов, в готовых модулях по 10 вопросов на уровень', () => {
     const linux = catalog.find((entry) => entry.source === 'linux')!.result
     if (!linux.ok) throw new Error(linux.errors.join('; '))
-    expect(linux.course.topics.map((t) => t.id)).toEqual(['shell', 'files', 'permissions', 'network'])
-    for (const topic of linux.course.topics.slice(0, 3)) {
+    expect(linux.course.topics.map((t) => t.id)).toEqual(['shell', 'files', 'permissions', 'text', 'processes', 'users', 'packages', 'network'])
+    // «Сеть» пока написана только на базовом уровне
+    for (const topic of linux.course.topics.filter((t) => t.id !== 'network')) {
       const levels = topic.questions.map(levelOf)
       expect([topic.id, ...['basic', 'intermediate', 'advanced'].map((l) => levels.filter((x) => x === l).length)]).toEqual([topic.id, 10, 10, 10])
       expect(topic.description).toBeTruthy()
       expect(topic.icon).toBeTruthy()
     }
-    expect(levelCounts(linux.course)).toEqual({ basic: 55, intermediate: 30, advanced: 30 })
+    expect(levelCounts(linux.course)).toEqual({ basic: 95, intermediate: 70, advanced: 70 })
   })
 
   it('верный ответ в готовых модулях не стоит всё время на одном месте и не выделяется длиной', () => {
