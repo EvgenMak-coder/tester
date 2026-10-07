@@ -47,9 +47,13 @@ export function courseStats(course: CourseFile, progress: CourseProgress, today:
   }
 }
 
-export function levelCounts(course: CourseFile): Record<Level, number> {
+/** Сколько вопросов каждого уровня в курсе или, если указан topicId, в одном модуле. */
+export function levelCounts(course: CourseFile, topicId?: string): Record<Level, number> {
   const counts: Record<Level, number> = { basic: 0, intermediate: 0, advanced: 0 }
-  for (const topic of course.topics) for (const q of topic.questions) counts[levelOf(q)]++
+  for (const topic of course.topics) {
+    if (topicId && topic.id !== topicId) continue
+    for (const q of topic.questions) counts[levelOf(q)]++
+  }
   return counts
 }
 

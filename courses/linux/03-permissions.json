@@ -1,6 +1,7 @@
 {
   "id": "permissions",
   "title": "Права доступа",
+  "icon": "key",
   "description": "Владелец, группа и остальные, chmod и chown, umask, особые биты, ACL, атрибуты и возможности",
   "questions": [
     {

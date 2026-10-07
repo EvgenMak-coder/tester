@@ -67,6 +67,7 @@ export interface SessionOptions {
   now: Date
   timeLimitSec?: number
   level?: Level
+  topicId?: string
 }
 
 /** Порядок вопросов и вариантов фиксируется здесь и дальше не меняется. */
@@ -83,6 +84,7 @@ export function createSession(courseId: string, picks: Pick[], mode: Mode, opts:
   const session: Session = { id: opts.id, courseId, mode, startedAt: opts.now.toISOString(), items, current: 0 }
   if (opts.timeLimitSec !== undefined) session.timeLimitSec = opts.timeLimitSec
   if (opts.level !== undefined) session.level = opts.level
+  if (opts.topicId !== undefined) session.topicId = opts.topicId
   return session
 }
 
@@ -135,5 +137,6 @@ export function toAttempt(course: CourseFile, session: Session, finishedAt: Date
     durationSec: session.timeLimitSec === undefined ? elapsed : Math.min(elapsed, session.timeLimitSec),
   }
   if (session.level !== undefined) attempt.level = session.level
+  if (session.topicId !== undefined) attempt.topicId = session.topicId
   return attempt
 }

@@ -4,7 +4,7 @@ import { assembleCatalog, isOutdated } from '../features/import/builtin'
 import { finishSession, importCourse, readBackup, submitAnswer } from '../data/actions'
 import { MemoryStore } from '../data/localStore'
 import { countQuestions, diffCourse, parseCourse, parseCourseText } from './format'
-import { createSession, pickQuestions, questionMap, score, secondsLeft, shuffled, trimToAnswered, withAnswer, type Rng } from './session'
+import { createSession, pickQuestions, questionMap, score, secondsLeft, shuffled, toAttempt, trimToAnswered, withAnswer, type Rng } from './session'
 import { addDays, review, toDay } from './srs'
 import { courseStats, levelCounts } from './stats'
 import { levelOf, type CourseFile, type CourseProgress, type QuestionProgress } from './types'
@@ -70,6 +70,7 @@ describe('формат курса', () => {
       const levels = topic.questions.map(levelOf)
       expect([topic.id, ...['basic', 'intermediate', 'advanced'].map((l) => levels.filter((x) => x === l).length)]).toEqual([topic.id, 10, 10, 10])
       expect(topic.description).toBeTruthy()
+      expect(topic.icon).toBeTruthy()
     }
     expect(levelCounts(linux.course)).toEqual({ basic: 55, intermediate: 30, advanced: 30 })
   })
@@ -231,6 +232,8 @@ describe('набор вопросов', () => {
     const session = createSession(mixed.id, pickQuestions(mixed, {}, 'exam', { today: TODAY, level: 'advanced' }), 'exam', { id: 's', now: new Date('2026-10-07T10:00:00'), level: 'advanced' })
     expect(session.level).toBe('advanced')
     expect(session.items.map((i) => i.questionId)).toEqual(['q4'])
+    expect(levelCounts(mixed, 't1')).toEqual({ basic: 1, intermediate: 2, advanced: 1 })
+    expect(levelCounts(mixed, 'other')).toEqual({ basic: 0, intermediate: 0, advanced: 0 })
   })
 
   it('работа над ошибками берёт вопросы с неверным последним ответом', () => {
@@ -277,6 +280,13 @@ describe('тест', () => {
     session = withAnswer(session, 1, (questions.get(session.items[1].questionId)!.answer + 1) % 5)
     expect(score(course, session)).toEqual({ total: 3, answered: 2, correct: 1 })
     expect(trimToAnswered(session).items).toHaveLength(2)
+  })
+
+  it('тест, запущенный в модуле, помнит его, и попытка тоже', () => {
+    const picks = pickQuestions(course, {}, 'practice', { today: TODAY, topicIds: ['t1'] })
+    const inModule = createSession(course.id, picks, 'practice', { id: 's3', now: start, topicId: 't1' })
+    expect(toAttempt(course, inModule, start).topicId).toBe('t1')
+    expect(toAttempt(course, make(), start).topicId).toBeUndefined()
   })
 
   it('отсчитывает время экзамена от начала теста', () => {

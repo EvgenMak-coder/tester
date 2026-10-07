@@ -35,6 +35,8 @@ export interface Topic {
   id: string
   title: string
   description?: string
+  /** имя значка модуля, список — в components/ModuleIcon.tsx */
+  icon?: string
   questions: Question[]
 }
 
@@ -88,6 +90,8 @@ export interface Session {
   timeLimitSec?: number
   /** уровень, выбранный при запуске; нет поля — все уровни */
   level?: Level
+  /** модуль, внутри которого запущен тест; нет поля — тест по всему курсу */
+  topicId?: string
 }
 
 export interface Attempt {
@@ -99,6 +103,7 @@ export interface Attempt {
   correct: number
   durationSec: number
   level?: Level
+  topicId?: string
 }
 
 export type CourseProgress = Record<string, QuestionProgress>

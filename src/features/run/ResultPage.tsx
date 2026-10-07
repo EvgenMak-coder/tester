@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { QuestionView } from './QuestionView'
 import { startSession } from './start'
+import { coursePath, testsPath } from '../../app/paths'
 import { duration } from '../../app/text'
 import { Page, Segmented } from '../../components/ui'
 import { useData } from '../../data/hooks'
@@ -21,7 +22,11 @@ export function ResultPage() {
 
   const questions = questionMap(course)
   const { total, correct, durationSec } = toAttempt(course, result, new Date(result.finishedAt ?? result.startedAt))
-  const mistakes = courseStats(course, snapshot.progress.questions[course.id] ?? {}, toDay(new Date())).all.mistakes
+  // тест шёл внутри модуля — возврат и работа над ошибками остаются в нём же
+  const topic = course.topics.find((t) => t.id === result.topicId)
+  const stats = courseStats(course, snapshot.progress.questions[course.id] ?? {}, toDay(new Date()))
+  const mistakes = (topic ? stats.topics.find((t) => t.topicId === topic.id) : undefined)?.mistakes ?? stats.all.mistakes
+  const origin = topic ? { to: testsPath(course.id, topic.id), label: topic.title } : { to: coursePath(course.id), label: course.title }
   const share = total > 0 ? correct / total : null
 
   const items = result.items
@@ -29,11 +34,11 @@ export function ResultPage() {
     .filter(({ item, question }) => question && (filter === 'all' || item.picked !== question.answer))
 
   const fixMistakes = async () => {
-    if (await startSession(snapshot, course, 'mistakes')) navigate('/run')
+    if (await startSession(snapshot, course, 'mistakes', { topicIds: topic && [topic.id] })) navigate('/run')
   }
 
   return (
-    <Page title="Результат" back={{ to: `/course/${course.id}`, label: course.title }}>
+    <Page title="Результат" back={origin}>
       <div className="card stack">
         <div className="row">
           <span className="result-score">
@@ -51,8 +56,8 @@ export function ResultPage() {
               Работа над ошибками ({mistakes})
             </button>
           )}
-          <Link className={mistakes > 0 ? 'btn' : 'btn primary'} to={`/course/${course.id}`}>
-            К курсу
+          <Link className={mistakes > 0 ? 'btn' : 'btn primary'} to={origin.to}>
+            {topic ? 'К модулю' : 'К курсу'}
           </Link>
         </div>
       </div>

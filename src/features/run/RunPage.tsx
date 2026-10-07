@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { QuestionView } from './QuestionView'
+import { coursePath, testsPath } from '../../app/paths'
 import { clock } from '../../app/text'
 import { Meter } from '../../components/ui'
 import { finishSession, goTo, submitAnswer } from '../../data/actions'
@@ -40,7 +41,9 @@ export function RunPage() {
     if (finishing.current) return
     finishing.current = true
     const recorded = await act((store) => finishSession(store, snapshot))
-    navigate(recorded ? '/result' : course ? `/course/${course.id}` : '/', { replace: true })
+    // нечего засчитывать — возвращаемся туда, откуда тест запускали
+    const origin = !course ? '/' : session?.topicId ? testsPath(course.id, session.topicId) : coursePath(course.id)
+    navigate(recorded ? '/result' : origin, { replace: true })
   }
 
   const pick = (original: number) => {

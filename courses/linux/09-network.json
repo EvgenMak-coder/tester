@@ -1,6 +1,7 @@
 {
   "id": "network",
   "title": "Сеть",
+  "icon": "network",
   "description": "Адреса и интерфейсы, DNS и DHCP, проверка связи, порты, удалённый доступ, загрузка файлов",
   "questions": [
     {

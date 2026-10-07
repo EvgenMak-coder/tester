@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './Layout'
 import { useSnapshot } from '../data/hooks'
 import { CoursePage } from '../features/course/CoursePage'
+import { TestsPage } from '../features/course/TestsPage'
 import { HomePage } from '../features/home/HomePage'
 import { ImportPage } from '../features/import/ImportPage'
 import { ResultPage } from '../features/run/ResultPage'
@@ -16,6 +17,8 @@ export function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/course/:id" element={<CoursePage />} />
+        <Route path="/course/:id/all" element={<TestsPage />} />
+        <Route path="/course/:id/module/:topicId" element={<TestsPage />} />
         <Route path="/run" element={<RunPage />} />
         <Route path="/result" element={<ResultPage />} />
         <Route path="/import" element={<ImportPage />} />

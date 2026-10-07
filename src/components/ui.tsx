@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
-export function Page({ title, back, lead, children }: { title: string; back?: { to: string; label: string }; lead?: ReactNode; children: ReactNode }) {
+export function Page({ title, back, lead, icon, children }: { title: string; back?: { to: string; label: string }; lead?: ReactNode; icon?: ReactNode; children: ReactNode }) {
   return (
     <main className="page">
       <header className="page-head">
@@ -10,7 +10,10 @@ export function Page({ title, back, lead, children }: { title: string; back?: { 
             ← {back.label}
           </Link>
         )}
-        <h1>{title}</h1>
+        <div className="page-title">
+          {icon}
+          <h1>{title}</h1>
+        </div>
         {lead && <p className="muted">{lead}</p>}
       </header>
       {children}

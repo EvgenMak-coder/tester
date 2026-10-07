@@ -28,6 +28,8 @@ export async function startSession(snapshot: Snapshot, course: Course, mode: Mod
     now,
     timeLimitSec: mode === 'exam' ? (opts.timeLimitSec ?? picks.length * EXAM_SECONDS_PER_QUESTION) : undefined,
     level: opts.level,
+    // тест по одному модулю помнит его: туда ведёт возврат и там показывается история
+    topicId: opts.topicIds?.length === 1 ? opts.topicIds[0] : undefined,
   })
   await act(async (store) => {
     if (unfinished) await finishSession(store, snapshot, now)

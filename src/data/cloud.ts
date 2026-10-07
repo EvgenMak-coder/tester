@@ -54,6 +54,7 @@ interface AttemptRow extends Synced {
   course_id: string
   mode: Mode
   level: Level | null
+  topic_id: string | null
   finished_at: string
   total: number
   correct: number
@@ -87,7 +88,7 @@ export class SupabaseRemote implements Remote {
       this.since<CourseRow>('courses', 'course_id,content,updated_at', ['course_id'], cursor),
       this.since<ClearRow>('course_clears', 'course_id,deleted,updated_at', ['course_id'], cursor),
       this.since<QuestionRow>('question_progress', 'course_id,question_id,seen,correct,wrong,last_correct,box,due,updated_at', ['course_id', 'question_id'], cursor),
-      this.since<AttemptRow>('attempts', 'id,course_id,mode,level,finished_at,total,correct,duration_sec', ['id'], cursor),
+      this.since<AttemptRow>('attempts', 'id,course_id,mode,level,topic_id,finished_at,total,correct,duration_sec', ['id'], cursor),
     ])
 
     const latest = [...courses, ...clears, ...questions, ...attempts].reduce<string | null>((max, row) => (max === null || Date.parse(row.synced_at) > Date.parse(max) ? row.synced_at : max), cursor)
@@ -105,6 +106,7 @@ export class SupabaseRemote implements Remote {
         attempts: attempts.map((r) => {
           const attempt: Attempt = { id: r.id, courseId: r.course_id, mode: r.mode, finishedAt: iso(r.finished_at), total: r.total, correct: r.correct, durationSec: r.duration_sec }
           if (r.level) attempt.level = r.level
+          if (r.topic_id) attempt.topicId = r.topic_id
           return attempt
         }),
       },
@@ -147,7 +149,7 @@ export class SupabaseRemote implements Remote {
     )
     await this.upsert(
       'attempts',
-      changes.attempts.map((a) => ({ id: a.id, course_id: a.courseId, mode: a.mode, level: a.level ?? null, finished_at: a.finishedAt, total: a.total, correct: a.correct, duration_sec: a.durationSec })),
+      changes.attempts.map((a) => ({ id: a.id, course_id: a.courseId, mode: a.mode, level: a.level ?? null, topic_id: a.topicId ?? null, finished_at: a.finishedAt, total: a.total, correct: a.correct, duration_sec: a.durationSec })),
       'user_id,id',
     )
 

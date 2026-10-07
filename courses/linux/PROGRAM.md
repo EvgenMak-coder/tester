@@ -24,6 +24,8 @@
 | 18 | `18-containers.json` | Контейнеры и виртуализация | Пространства имён и cgroups, Docker и Podman, образы, тома и сети, chroot, KVM | — |
 | 19 | `19-services.json` | Сетевые службы | Веб-сервер и обратный прокси, TLS-сертификаты, DNS-сервер, NFS и Samba, NTP, почта | — |
 
+Значки модулей по порядку (поле `icon`): `terminal`, `files`, `key`, `text`, `activity`, `users`, `package`, `disk`, `network`, `lock`, `service`, `power`, `logs`, `code`, `schedule`, `shield`, `gauge`, `container`, `server`.
+
 ## Как устроены файлы
 
 `course.json` — шапка курса: `format`, `version` и блок `course`. Каждый файл модуля — одна тема в формате из `docs/FORMAT.md`:
@@ -32,6 +34,7 @@
 {
   "id": "shell",
   "title": "Оболочка и командная строка",
+  "icon": "terminal",
   "description": "Одна строка о содержании модуля",
   "questions": []
 }
