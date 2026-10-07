@@ -59,6 +59,8 @@ export interface QuestionProgress {
   /** коробка Лейтнера, 1..5 */
   box: number
   due: Day
+  /** когда запись изменили; по этой отметке синхронизация выбирает более свежую */
+  updatedAt?: string
 }
 
 export type Mode = 'practice' | 'mistakes' | 'review' | 'exam'
@@ -99,12 +101,20 @@ export interface Attempt {
 
 export type CourseProgress = Record<string, QuestionProgress>
 
+/** Сброс прогресса или удаление курса: всё, что сделано по курсу до at, стёрто. */
+export interface Clear {
+  at: string
+  deleted: boolean
+}
+
 export interface Progress {
   /** courseId → questionId → прогресс */
   questions: Record<string, CourseProgress>
   attempts: Attempt[]
   session: Session | null
   lastResult: Session | null
+  /** courseId → последний сброс; нужно, чтобы стирание дошло до других устройств */
+  cleared: Record<string, Clear>
 }
 
 export interface Snapshot {
@@ -113,7 +123,7 @@ export interface Snapshot {
 }
 
 export function emptyProgress(): Progress {
-  return { questions: {}, attempts: [], session: null, lastResult: null }
+  return { questions: {}, attempts: [], session: null, lastResult: null, cleared: {} }
 }
 
 export function emptySnapshot(): Snapshot {

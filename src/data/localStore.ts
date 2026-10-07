@@ -1,5 +1,5 @@
 import type { DataStore } from './store'
-import { emptyProgress, type Attempt, type Course, type Progress, type QuestionProgress, type Session, type Snapshot } from '../quiz/types'
+import { emptyProgress, type Attempt, type Clear, type Course, type Progress, type QuestionProgress, type Session, type Snapshot } from '../quiz/types'
 
 // курсы и прогресс лежат отдельно: прогресс пишется на каждый ответ, а курсы большие и меняются редко
 export const COURSES_KEY = 'tester:courses:v1'
@@ -54,9 +54,9 @@ export class LocalStore implements DataStore {
     return Promise.resolve()
   }
 
-  deleteCourse(id: string): Promise<void> {
+  deleteCourse(id: string, at: string): Promise<void> {
     this.writeCourses(this.readCourses().filter((c) => c.id !== id))
-    return this.mutateProgress((p) => clearCourse(p, id))
+    return this.mutateProgress((p) => clearCourse(p, id, { at, deleted: true }))
   }
 
   saveQuestionProgress(courseId: string, questionId: string, progress: QuestionProgress): Promise<void> {
@@ -81,8 +81,16 @@ export class LocalStore implements DataStore {
     })
   }
 
-  resetProgress(courseId: string): Promise<void> {
-    return this.mutateProgress((p) => clearCourse(p, courseId))
+  resetProgress(courseId: string, at: string): Promise<void> {
+    return this.mutateProgress((p) => clearCourse(p, courseId, { at, deleted: false }))
+  }
+
+  transform(fn: (snapshot: Snapshot) => Snapshot): Promise<void> {
+    // чтение и запись идут подряд без await, поэтому в браузере это одна неделимая операция
+    const next = fn({ courses: this.readCourses(), progress: this.readProgress() })
+    this.writeCourses(next.courses)
+    this.writeProgress(next.progress)
+    return Promise.resolve()
   }
 
   replaceAll(snapshot: Snapshot): Promise<void> {
@@ -92,7 +100,8 @@ export class LocalStore implements DataStore {
   }
 }
 
-function clearCourse(p: Progress, courseId: string): void {
+function clearCourse(p: Progress, courseId: string, clear: Clear): void {
+  p.cleared[courseId] = clear
   delete p.questions[courseId]
   p.attempts = p.attempts.filter((a) => a.courseId !== courseId)
   if (p.session?.courseId === courseId) p.session = null

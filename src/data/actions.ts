@@ -17,7 +17,7 @@ async function recordAnswer(store: DataStore, snapshot: Snapshot, course: Course
   const question = questionMap(course).get(questionId)
   if (!question) return
   const prev = snapshot.progress.questions[course.id]?.[questionId]
-  await store.saveQuestionProgress(course.id, questionId, review(prev, picked === question.answer, toDay(now)))
+  await store.saveQuestionProgress(course.id, questionId, { ...review(prev, picked === question.answer, toDay(now)), updatedAt: now.toISOString() })
 }
 
 /**
@@ -65,6 +65,20 @@ export async function finishSession(store: DataStore, snapshot: Snapshot, now: D
   await store.setLastResult({ ...session, finishedAt: now.toISOString() })
   await store.setSession(null)
   return true
+}
+
+/**
+ * Стирает все курсы и весь прогресс. Каждый курс помечается удалённым, а не просто исчезает:
+ * иначе при синхронизации другое устройство вернуло бы его обратно.
+ */
+export function wipeAll(store: DataStore, now: Date = new Date()): Promise<void> {
+  const at = now.toISOString()
+  return store.transform((snapshot) => {
+    const ids = new Set([...snapshot.courses.map((c) => c.id), ...Object.keys(snapshot.progress.questions), ...snapshot.progress.attempts.map((a) => a.courseId)])
+    const cleared = { ...snapshot.progress.cleared }
+    for (const id of ids) cleared[id] = { at, deleted: true }
+    return { courses: [], progress: { ...emptyProgress(), cleared } }
+  })
 }
 
 /** Проверяет файл резервной копии настолько, чтобы приложение не упало на чужом JSON. */

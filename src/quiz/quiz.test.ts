@@ -336,7 +336,7 @@ describe('сценарии', () => {
     expect(snapshot.courses).toHaveLength(1)
     expect(snapshot.courses[0].title).toBe('Курс, версия 2')
     expect(snapshot.progress.questions.c1[answered].seen).toBe(1)
-    await store.deleteCourse('c1')
+    await store.deleteCourse('c1', now.toISOString())
     snapshot = await store.load()
     expect(snapshot.courses).toHaveLength(0)
     expect(snapshot.progress.questions.c1).toBeUndefined()

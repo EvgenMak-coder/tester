@@ -70,12 +70,12 @@ export function CoursePage() {
   }
 
   const resetProgress = () => {
-    if (window.confirm(`Стереть прогресс и историю попыток по курсу «${course.title}»? Вопросы останутся.`)) void act((store) => store.resetProgress(course.id))
+    if (window.confirm(`Стереть прогресс и историю попыток по курсу «${course.title}»? Вопросы останутся.`)) void act((store) => store.resetProgress(course.id, new Date().toISOString()))
   }
 
   const remove = async () => {
     if (!window.confirm(`Удалить курс «${course.title}» вместе с прогрессом?`)) return
-    await act((store) => store.deleteCourse(course.id))
+    await act((store) => store.deleteCourse(course.id, new Date().toISOString()))
     navigate('/', { replace: true })
   }
 

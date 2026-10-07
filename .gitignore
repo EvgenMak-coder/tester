@@ -8,3 +8,7 @@ dist/
 .DS_Store
 Thumbs.db
 *.log
+
+# файлы с ключами и токенами — никогда не в репозиторий
+.env*
+!.env.example

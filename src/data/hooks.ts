@@ -29,12 +29,20 @@ export function useData(): Snapshot {
   return data
 }
 
+const changeListeners = new Set<() => void>()
+
+/** Подписка на изменения, сделанные пользователем; ею пользуется синхронизация. */
+export function onLocalChange(listener: () => void): void {
+  changeListeners.add(listener)
+}
+
 /** Выполняет действие над хранилищем и обновляет экран. */
 export async function act<T>(fn: (store: DataStore) => Promise<T>): Promise<T> {
   try {
     return await fn(store)
   } finally {
     await refresh()
+    changeListeners.forEach((l) => l())
   }
 }
 
