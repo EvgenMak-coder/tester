@@ -55,7 +55,10 @@ export function Catalog({ pendingOnly = false }: { pendingOnly?: boolean }) {
                 </p>
                 {diff && (
                   <p className="small">
-                    Есть обновление: новых вопросов — {diff.added}, изменённых — {diff.changed}, удалённых — {diff.removed}. Прогресс сохранится.
+                    {diff.added + diff.changed + diff.removed > 0
+                      ? `Есть обновление: новых вопросов — ${diff.added}, изменённых — ${diff.changed}, удалённых — ${diff.removed}.`
+                      : 'Есть обновление: изменились описания или теория модулей, вопросы те же.'}{' '}
+                    Прогресс сохранится.
                   </p>
                 )}
               </div>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { parseMarkdown } from '../app/markdown'
 import demoText from '../../courses/linux-demo.json?raw'
 import { assembleCatalog, isOutdated } from '../features/import/builtin'
 import { finishSession, importCourse, readBackup, submitAnswer } from '../data/actions'
@@ -52,7 +53,7 @@ describe('формат курса', () => {
     }
   })
 
-  const catalog = assembleCatalog(import.meta.glob<string>(['../../courses/*.json', '../../courses/*/*.json'], { query: '?raw', import: 'default', eager: true }))
+  const catalog = assembleCatalog(import.meta.glob<string>(['../../courses/*.json', '../../courses/*/*.json', '../../courses/*/theory/*.md'], { query: '?raw', import: 'default', eager: true }))
 
   it('все курсы каталога проходят проверку и не делят id', () => {
     const ids = catalog.map(({ source, result }) => {
@@ -116,6 +117,42 @@ describe('формат курса', () => {
     expect(errors({ '../courses/c1/01-a.json': topic })).toEqual(['c1: нет файла course.json'])
     expect(errors({ '../courses/c1/course.json': header, '../courses/c1/01-a.json': '{ "id": ' })[0]).toMatch(/^c1\/01-a\.json: это не JSON/)
     expect(errors({ '../courses/c1/course.json': header, '../courses/c1/01-a.json': topic, '../courses/c1/02-b.json': topic })[0]).toMatch(/^topics\[1\]\.id: id темы «t1» повторяется/)
+  })
+
+  it('подставляет тексты теории из theory/модуль.уровень.md в свой модуль', () => {
+    const header = JSON.stringify({ format: 'tester-course', version: 1, course: { id: 'c1', title: 'Курс' } })
+    const topic = JSON.stringify({ id: 't1', title: 'Тема', theory: { basic: { plan: ['Пути'] } }, questions: [question('q1')] })
+    const base = { '../courses/c1/course.json': header, '../courses/c1/01-a.json': topic }
+    const { result } = assembleCatalog({ ...base, '../courses/c1/theory/01-a.basic.md': '# Пути', '../courses/c1/theory/01-a.advanced.md': '# Ссылки' })[0]
+    if (!result.ok) throw new Error(result.errors.join('; '))
+    expect(result.course.topics[0].theory).toEqual({ basic: { plan: ['Пути'], text: '# Пути' }, advanced: { text: '# Ссылки' } })
+    const errors = (name: string) => {
+      const { result } = assembleCatalog({ ...base, [`../courses/c1/theory/${name}.md`]: 'текст' })[0]
+      return result.ok ? [] : result.errors
+    }
+    expect(errors('01-a.expert')).toEqual(['c1/theory/01-a.expert.md: имя файла должно быть вида имя-модуля.уровень.md'])
+    expect(errors('02-b.basic')).toEqual(['c1/theory/02-b.basic.md: имя файла должно быть вида имя-модуля.уровень.md'])
+  })
+
+  it('тексты теории курса Linux написаны разметкой, которую понимает приложение', () => {
+    const linux = catalog.find((entry) => entry.source === 'linux')!.result
+    if (!linux.ok) throw new Error(linux.errors.join('; '))
+    const written = linux.course.topics.filter((t) => Object.values(t.theory ?? {}).some((lesson) => lesson.text))
+    expect(written.map((t) => t.id)).toEqual(['shell', 'files', 'permissions'])
+    for (const topic of written) {
+      for (const level of ['basic', 'intermediate', 'advanced'] as const) {
+        const text = topic.theory?.[level]?.text ?? ''
+        const where = `${topic.id}.${level}`
+        const blocks = parseMarkdown(text)
+        expect([where, blocks.filter((b) => b.kind === 'heading').length >= 4]).toEqual([where, true])
+        expect([where, blocks[blocks.length - 1].kind]).toEqual([where, 'list'])
+        // вне блоков кода не должно остаться разметки, которой приложение не знает
+        const prose = blocks.flatMap((b) => (b.kind === 'code' ? [] : b.kind === 'list' ? b.items : [b.text]))
+        const odd = prose.filter((line) => /\]\(|^\||^#{1,6}\s|^\s*[-*]\s/.test(line) || (line.match(/`/g) ?? []).length % 2 === 1 || (line.match(/\*\*/g) ?? []).length % 2 === 1)
+        expect([where, odd]).toEqual([where, []])
+        expect([where, (text.match(/^```/gm) ?? []).length % 2]).toEqual([where, 0])
+      }
+    }
   })
 
   it('замечает, что курс в каталоге новее добавленного', () => {
