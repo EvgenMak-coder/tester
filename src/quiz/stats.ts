@@ -20,6 +20,7 @@ export interface Stats {
 export interface TopicStats extends Stats {
   topicId: string
   title: string
+  description?: string
 }
 
 function collect(questions: Question[], progress: CourseProgress, today: Day): Stats {
@@ -42,7 +43,7 @@ export function courseStats(course: CourseFile, progress: CourseProgress, today:
   const of = (questions: Question[]) => (level ? questions.filter((q) => levelOf(q) === level) : questions)
   return {
     all: collect(of(course.topics.flatMap((t) => t.questions)), progress, today),
-    topics: course.topics.map((t) => ({ topicId: t.id, title: t.title, ...collect(of(t.questions), progress, today) })),
+    topics: course.topics.map((t) => ({ topicId: t.id, title: t.title, description: t.description, ...collect(of(t.questions), progress, today) })),
   }
 }
 

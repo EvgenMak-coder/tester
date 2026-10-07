@@ -1,13 +1,60 @@
-import { parseCourseText } from '../../quiz/format'
+import { parseCourse, parseCourseText, type ParseResult } from '../../quiz/format'
 import type { Course, CourseFile } from '../../quiz/types'
 
 // каждый файл из courses/ собирается отдельным куском и грузится, только когда каталог открыт
-const files = import.meta.glob<string>('../../../courses/*.json', { query: '?raw', import: 'default' })
+const files = import.meta.glob<string>(['../../../courses/*.json', '../../../courses/*/*.json'], { query: '?raw', import: 'default' })
 
-/** Курсы, которые поставляются вместе с приложением. Файл с ошибками в каталог не попадает. */
+export interface CatalogEntry {
+  /** файл курса или его папка, для сообщений об ошибках */
+  source: string
+  result: ParseResult
+}
+
+/**
+ * Собирает курсы из текстов файлов. Курс — это либо один файл courses/имя.json,
+ * либо папка: шапка course.json и по файлу на модуль, модули идут в порядке имён файлов.
+ */
+export function assembleCatalog(texts: Record<string, string>): CatalogEntry[] {
+  const entries: CatalogEntry[] = []
+  const folders = new Map<string, { header?: string; topics: [string, string][] }>()
+
+  for (const path of Object.keys(texts).sort()) {
+    const [, folder, name] = /courses\/(?:([^/]+)\/)?([^/]+)\.json$/.exec(path) ?? []
+    if (!name) continue
+    if (!folder) {
+      entries.push({ source: `${name}.json`, result: parseCourseText(texts[path]) })
+      continue
+    }
+    const parts = folders.get(folder) ?? { topics: [] }
+    if (name === 'course') parts.header = texts[path]
+    else parts.topics.push([`${folder}/${name}.json`, texts[path]])
+    folders.set(folder, parts)
+  }
+
+  for (const [folder, parts] of folders) {
+    const errors: string[] = []
+    const read = (source: string, text: string): unknown => {
+      try {
+        return JSON.parse(text)
+      } catch (e) {
+        errors.push(`${source}: это не JSON: ${e instanceof Error ? e.message : String(e)}`)
+        return null
+      }
+    }
+    const header = parts.header === undefined ? (errors.push(`${folder}: нет файла course.json`), null) : read(`${folder}/course.json`, parts.header)
+    const topics = parts.topics.map(([source, text]) => read(source, text))
+    const result: ParseResult = errors.length > 0 ? { ok: false, errors } : parseCourse({ ...(header as object), topics })
+    entries.push({ source: folder, result })
+  }
+  return entries
+}
+
+/** Курсы, которые поставляются вместе с приложением. Курс с ошибками в каталог не попадает. */
 export async function loadCatalog(): Promise<CourseFile[]> {
-  const texts = await Promise.all(Object.values(files).map((load) => load()))
-  return texts.map(parseCourseText).flatMap((result) => (result.ok ? [result.course] : []))
+  const paths = Object.keys(files)
+  const texts = await Promise.all(paths.map((path) => files[path]()))
+  const entries = assembleCatalog(Object.fromEntries(paths.map((path, i) => [path, texts[i]])))
+  return entries.flatMap(({ result }) => (result.ok ? [result.course] : []))
 }
 
 /** Отличается ли добавленный курс от версии в каталоге. */

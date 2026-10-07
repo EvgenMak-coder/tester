@@ -559,7 +559,18 @@ td.wide {
   cursor: pointer;
 }
 
+.module-about {
+  display: block;
+}
+
+.btn.small-btn {
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: 0.875rem;
+}
+
 .check input {
+  flex: none;
   width: 17px;
   height: 17px;
   accent-color: var(--accent);

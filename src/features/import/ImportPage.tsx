@@ -1,7 +1,7 @@
 import { useRef, useState, type DragEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Catalog } from './Catalog'
-import { plural, QUESTIONS, TOPICS } from '../../app/text'
+import { plural, QUESTIONS, MODULES } from '../../app/text'
 import { Page } from '../../components/ui'
 import { importCourse } from '../../data/actions'
 import { act, useData } from '../../data/hooks'
@@ -70,7 +70,7 @@ export function ImportPage() {
             {course.description && <p className="muted small">{course.description}</p>}
           </div>
           <p className="small">
-            {plural(countQuestions(course), QUESTIONS)} · {plural(course.topics.length, TOPICS)} · id <span className="mono">{course.id}</span>
+            {plural(countQuestions(course), QUESTIONS)} · {plural(course.topics.length, MODULES)} · id <span className="mono">{course.id}</span>
             {source && ` · ${source}`}
           </p>
           {byLevel && (

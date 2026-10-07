@@ -30,9 +30,11 @@ export function levelOf(question: Question): Level {
   return question.level ?? 'basic'
 }
 
+/** Тема курса; в приложении называется модулем. */
 export interface Topic {
   id: string
   title: string
+  description?: string
   questions: Question[]
 }
 

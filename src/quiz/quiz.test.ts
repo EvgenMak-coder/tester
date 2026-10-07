@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import demoText from '../../courses/linux-demo.json?raw'
-import linuxText from '../../courses/linux.json?raw'
-import { isOutdated } from '../features/import/builtin'
+import { assembleCatalog, isOutdated } from '../features/import/builtin'
 import { finishSession, importCourse, readBackup, submitAnswer } from '../data/actions'
 import { MemoryStore } from '../data/localStore'
 import { countQuestions, diffCourse, parseCourse, parseCourseText } from './format'
 import { createSession, pickQuestions, questionMap, score, secondsLeft, shuffled, trimToAnswered, withAnswer, type Rng } from './session'
 import { addDays, review, toDay } from './srs'
 import { courseStats, levelCounts } from './stats'
-import type { CourseFile, CourseProgress, QuestionProgress } from './types'
+import { levelOf, type CourseFile, type CourseProgress, type QuestionProgress } from './types'
 
 function seeded(seed: number): Rng {
   let a = seed
@@ -53,21 +52,54 @@ describe('формат курса', () => {
     }
   })
 
-  it('принимает курс Linux', () => {
-    const result = parseCourseText(linuxText)
-    expect(result.ok ? null : result.errors).toBeNull()
-    if (result.ok) expect(levelCounts(result.course)).toEqual({ basic: 25, intermediate: 0, advanced: 0 })
+  const catalog = assembleCatalog(import.meta.glob<string>(['../../courses/*.json', '../../courses/*/*.json'], { query: '?raw', import: 'default', eager: true }))
+
+  it('все курсы каталога проходят проверку и не делят id', () => {
+    const ids = catalog.map(({ source, result }) => {
+      expect(result.ok ? null : { source, errors: result.errors }).toBeNull()
+      return result.ok ? result.course.id : source
+    })
+    expect(ids.sort()).toEqual(['linux', 'linux-demo'])
   })
 
-  it('все файлы каталога проходят проверку и не делят id курса', () => {
-    const files = import.meta.glob<string>('../../courses/*.json', { query: '?raw', import: 'default', eager: true })
-    const ids = Object.entries(files).map(([path, text]) => {
-      const result = parseCourseText(text)
-      expect(result.ok ? null : { path, errors: result.errors }).toBeNull()
-      return result.ok ? result.course.id : path
-    })
-    expect(ids.length).toBeGreaterThan(0)
-    expect(new Set(ids).size).toBe(ids.length)
+  it('курс Linux собирается из папки: модули идут по порядку файлов, в готовых модулях по 10 вопросов на уровень', () => {
+    const linux = catalog.find((entry) => entry.source === 'linux')!.result
+    if (!linux.ok) throw new Error(linux.errors.join('; '))
+    expect(linux.course.topics.map((t) => t.id)).toEqual(['shell', 'files', 'permissions', 'network'])
+    for (const topic of linux.course.topics.slice(0, 3)) {
+      const levels = topic.questions.map(levelOf)
+      expect([topic.id, ...['basic', 'intermediate', 'advanced'].map((l) => levels.filter((x) => x === l).length)]).toEqual([topic.id, 10, 10, 10])
+      expect(topic.description).toBeTruthy()
+    }
+    expect(levelCounts(linux.course)).toEqual({ basic: 55, intermediate: 30, advanced: 30 })
+  })
+
+  it('верный ответ в готовых модулях не стоит всё время на одном месте и не выделяется длиной', () => {
+    const linux = catalog.find((entry) => entry.source === 'linux')!.result
+    if (!linux.ok) throw new Error(linux.errors.join('; '))
+    for (const topic of linux.course.topics) {
+      const positions = new Set(topic.questions.map((q) => q.answer))
+      expect([topic.id, positions.size >= 4]).toEqual([topic.id, true])
+      // доля вопросов, где верный вариант — самый длинный и заметно длиннее второго по длине
+      const standout = topic.questions.filter((q) => {
+        const others = q.options.filter((_, i) => i !== q.answer).map((o) => o.length)
+        return q.options[q.answer].length > Math.max(...others) * 1.5 && q.options[q.answer].length > 40
+      })
+      expect([topic.id, standout.map((q) => q.id)]).toEqual([topic.id, []])
+    }
+  })
+
+  it('сообщает об ошибках в папке курса', () => {
+    const header = JSON.stringify({ format: 'tester-course', version: 1, course: { id: 'c1', title: 'Курс' } })
+    const topic = JSON.stringify({ id: 't1', title: 'Тема', questions: [question('q1')] })
+    const errors = (texts: Record<string, string>) => {
+      const { result } = assembleCatalog(texts)[0]
+      return result.ok ? [] : result.errors
+    }
+    expect(errors({ '../courses/c1/course.json': header, '../courses/c1/01-a.json': topic })).toEqual([])
+    expect(errors({ '../courses/c1/01-a.json': topic })).toEqual(['c1: нет файла course.json'])
+    expect(errors({ '../courses/c1/course.json': header, '../courses/c1/01-a.json': '{ "id": ' })[0]).toMatch(/^c1\/01-a\.json: это не JSON/)
+    expect(errors({ '../courses/c1/course.json': header, '../courses/c1/01-a.json': topic, '../courses/c1/02-b.json': topic })[0]).toMatch(/^topics\[1\]\.id: id темы «t1» повторяется/)
   })
 
   it('замечает, что курс в каталоге новее добавленного', () => {

@@ -1,0 +1,9 @@
+{
+  "format": "tester-course",
+  "version": 1,
+  "course": {
+    "id": "linux",
+    "title": "Linux",
+    "description": "От командной строки до администрирования: модули с тестами трёх уровней"
+  }
+}

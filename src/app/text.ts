@@ -13,7 +13,7 @@ export function plural(n: number, forms: Forms): string {
 }
 
 export const QUESTIONS: Forms = ['вопрос', 'вопроса', 'вопросов']
-export const TOPICS: Forms = ['тема', 'темы', 'тем']
+export const MODULES: Forms = ['модуль', 'модуля', 'модулей']
 export const MISTAKES: Forms = ['ошибка', 'ошибки', 'ошибок']
 
 /** 75 → «1:15». */

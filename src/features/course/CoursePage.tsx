@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
-import { dateTime, duration, MISTAKES, plural, QUESTIONS, TOPICS, wordFor } from '../../app/text'
+import { dateTime, duration, MISTAKES, plural, QUESTIONS, MODULES, wordFor } from '../../app/text'
 import { Meter, Page, Segmented, Stat } from '../../components/ui'
 import { act, useData } from '../../data/hooks'
 import { REVIEW_NEW_LIMIT } from '../../quiz/session'
@@ -105,7 +105,7 @@ export function CoursePage() {
 
       <div className="row between">
         <h2>Режимы</h2>
-        <span className="muted small">{chosen.length === topics.length ? 'Все темы' : `Выбрано: ${plural(chosen.length, TOPICS)} из ${topics.length}`}</span>
+        <span className="muted small">{chosen.length === topics.length ? 'Все модули' : `Выбрано: ${plural(chosen.length, MODULES)} из ${topics.length}`}</span>
       </div>
       <div className="modes">
         <div className="card mode">
@@ -155,7 +155,7 @@ export function CoursePage() {
       </div>
 
       <div className="row between">
-        <h2>Темы</h2>
+        <h2>Модули</h2>
         <button type="button" className="btn quiet" onClick={() => setExcluded(excluded.size === 0 ? new Set(topics.map((t) => t.topicId)) : new Set())}>
           {excluded.size === 0 ? 'Снять все' : 'Выбрать все'}
         </button>
@@ -164,12 +164,13 @@ export function CoursePage() {
         <table>
           <thead>
             <tr>
-              <th>Тема</th>
+              <th>Модуль</th>
               <th className="num">Вопросов</th>
               <th>Пройдено</th>
               <th className="num">Верных</th>
               <th className="num">Повторить</th>
               <th className="num">Ошибки</th>
+              <th />
             </tr>
           </thead>
           <tbody>
@@ -178,13 +179,16 @@ export function CoursePage() {
                 <td className="wide">
                   <label className="check">
                     <input type="checkbox" checked={!excluded.has(t.topicId)} onChange={() => toggle(t.topicId)} />
-                    {t.title}
+                    <span>
+                      {t.title}
+                      {t.description && <span className="muted small module-about">{t.description}</span>}
+                    </span>
                   </label>
                 </td>
                 <td className="num">{t.total}</td>
                 <td>
                   <div className="coverage">
-                    <Meter share={t.seen / t.total} label={`Пройдено по теме «${t.title}»`} />
+                    <Meter share={t.seen / t.total} label={`Пройдено по модулю «${t.title}»`} />
                     <span className="muted small">
                       {t.seen}/{t.total}
                     </span>
@@ -193,6 +197,16 @@ export function CoursePage() {
                 <td className="num">{percent(t.accuracy)}</td>
                 <td className="num">{t.due || '—'}</td>
                 <td className="num">{t.mistakes || '—'}</td>
+                <td>
+                  <button
+                    type="button"
+                    className="btn small-btn"
+                    aria-label={`Начать тренировку по модулю «${t.title}»`}
+                    onClick={() => void start('practice', { topicIds: [t.topicId], count: count === ALL ? undefined : count })}
+                  >
+                    Начать
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

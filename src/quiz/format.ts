@@ -118,7 +118,10 @@ function readTopic(raw: unknown, path: string, report: Report, topicIds: Set<str
     const question = readQuestion(q, `${path}.questions[${i}]`, report, questionIds)
     if (question) questions.push(question)
   })
-  return { id: id ?? '', title: raw.title as string, questions }
+  const topic: Topic = { id: id ?? '', title: raw.title as string, questions }
+  const description = readOptionalText(raw, 'description', path, report)
+  if (description !== undefined) topic.description = description
+  return topic
 }
 
 /** Проверяет разобранный JSON курса. Ошибки называют путь до поля. */

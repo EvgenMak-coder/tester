@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { plural, QUESTIONS, TOPICS } from '../../app/text'
+import { plural, QUESTIONS, MODULES } from '../../app/text'
 import { Meter, Page } from '../../components/ui'
 import { useData } from '../../data/hooks'
 import { toDay } from '../../quiz/srs'
@@ -55,7 +55,7 @@ export function HomePage() {
               {course.description && <p className="muted small">{course.description}</p>}
             </div>
             <p className="muted small">
-              {plural(stats.total, QUESTIONS)} · {plural(course.topics.length, TOPICS)}
+              {plural(stats.total, QUESTIONS)} · {plural(course.topics.length, MODULES)}
             </p>
             <Meter share={stats.total > 0 ? stats.seen / stats.total : 0} label="Пройдено вопросов" />
             <div className="row">
