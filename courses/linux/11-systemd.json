@@ -1,0 +1,423 @@
+{
+  "id": "systemd",
+  "title": "systemd и службы",
+  "icon": "service",
+  "description": "systemctl, запуск и автозапуск, unit-файлы и зависимости, цели, таймеры, ограничения и защита служб",
+  "questions": [
+    {
+      "id": "sysd-001",
+      "type": "single",
+      "level": "basic",
+      "text": "Что такое служба (демон) в Linux?",
+      "options": [
+        "Программа, которая запускается только по команде пользователя",
+        "Программа, которая работает в фоне и не требует участия пользователя",
+        "Программа с графическим окном для настройки системы",
+        "Учётная запись администратора с особыми правами",
+        "Файл с настройками, который читается при загрузке"
+      ],
+      "answer": 1,
+      "explanation": "Службы — веб-сервер, сервер SSH, планировщик заданий — стартуют при загрузке и работают постоянно. В большинстве дистрибутивов ими управляет systemd."
+    },
+    {
+      "id": "sysd-002",
+      "type": "single",
+      "level": "basic",
+      "text": "Какая команда покажет, запущена ли служба nginx и что она писала в журнал последним?",
+      "options": ["systemctl status nginx", "systemctl show-log nginx", "systemctl check nginx", "systemctl info nginx", "systemctl list nginx"],
+      "answer": 0,
+      "explanation": "status выводит состояние службы, номер главного процесса, время работы и последние строки журнала. Для этой команды права root обычно не нужны."
+    },
+    {
+      "id": "sysd-003",
+      "type": "single",
+      "level": "basic",
+      "text": "Какой командой запустить остановленную службу nginx?",
+      "options": ["sudo systemctl run nginx", "sudo systemctl open nginx", "sudo systemctl enable nginx", "sudo systemctl start nginx", "sudo systemctl begin nginx"],
+      "answer": 3,
+      "explanation": "start запускает службу сейчас. enable её не запускает, а только включает автозапуск при следующей загрузке системы."
+    },
+    {
+      "id": "sysd-004",
+      "type": "single",
+      "level": "basic",
+      "text": "Что делает команда?",
+      "code": "sudo systemctl restart nginx",
+      "options": [
+        "Перезагружает компьютер, на котором работает nginx",
+        "Включает автозапуск nginx при загрузке системы",
+        "Останавливает службу nginx и запускает её заново",
+        "Переустанавливает программу nginx из репозитория",
+        "Возвращает настройки nginx к значениям по умолчанию"
+      ],
+      "answer": 2,
+      "explanation": "restart — это stop и следом start. Так применяют изменения настроек, которые служба читает только при запуске."
+    },
+    {
+      "id": "sysd-005",
+      "type": "single",
+      "level": "basic",
+      "text": "Какая команда сделает так, чтобы служба nginx запускалась сама при каждой загрузке системы?",
+      "options": ["sudo systemctl start nginx", "sudo systemctl autostart nginx", "sudo systemctl boot nginx", "sudo systemctl restart nginx", "sudo systemctl enable nginx"],
+      "answer": 4,
+      "explanation": "enable включает автозапуск, disable отключает. На то, работает ли служба прямо сейчас, эти команды не влияют."
+    },
+    {
+      "id": "sysd-006",
+      "type": "single",
+      "level": "basic",
+      "text": "Что означает такая строка в выводе systemctl status?",
+      "code": "Active: inactive (dead)",
+      "options": [
+        "Служба сейчас не запущена",
+        "Служба удалена из системы",
+        "Служба зависла и не отвечает",
+        "Служба запущена, но ничем не занята",
+        "Служба запрещена администратором"
+      ],
+      "answer": 0,
+      "explanation": "inactive (dead) — обычное состояние остановленной службы, а не признак поломки. Сбой выглядит иначе: failed. Работающая служба помечена как active (running)."
+    },
+    {
+      "id": "sysd-007",
+      "type": "single",
+      "level": "basic",
+      "text": "Какой командой остановить работающую службу nginx?",
+      "options": ["sudo systemctl kill-all nginx", "sudo systemctl stop nginx", "sudo systemctl disable nginx", "sudo systemctl end nginx", "sudo systemctl off nginx"],
+      "answer": 1,
+      "explanation": "stop останавливает службу сейчас. disable только отключает автозапуск: работающая служба продолжит работать до перезагрузки."
+    },
+    {
+      "id": "sysd-008",
+      "type": "single",
+      "level": "basic",
+      "text": "Какая команда покажет журнал только одной службы — nginx?",
+      "options": ["journalctl nginx", "systemctl log nginx", "cat /var/log/journal", "journalctl -u nginx", "systemctl journal nginx"],
+      "answer": 3,
+      "explanation": "Ключ -u (unit) отбирает записи одной службы. journalctl -u nginx -f продолжит выводить новые строки по мере их появления."
+    },
+    {
+      "id": "sysd-009",
+      "type": "single",
+      "level": "basic",
+      "text": "Почему для запуска и остановки системных служб нужен sudo?",
+      "options": [
+        "Потому что systemctl не работает без подключения к сети",
+        "Потому что службы хранятся в домашнем каталоге root",
+        "Потому что это меняет состояние всей системы, а не одного пользователя",
+        "Потому что без sudo служба запустится только на минуту",
+        "Потому что sudo записывает действие в журнал службы"
+      ],
+      "answer": 2,
+      "explanation": "Службы обслуживают всех пользователей и часто работают с правами root. Смотреть их состояние можно без sudo, а управлять — только с правами администратора."
+    },
+    {
+      "id": "sysd-010",
+      "type": "single",
+      "level": "basic",
+      "text": "Что делает команда?",
+      "code": "sudo systemctl disable nginx",
+      "options": [
+        "Останавливает службу nginx немедленно",
+        "Удаляет программу nginx из системы",
+        "Запрещает пользователям обращаться к nginx",
+        "Удаляет файлы настроек nginx",
+        "Отключает автозапуск nginx при загрузке системы"
+      ],
+      "answer": 4,
+      "explanation": "disable убирает службу из автозапуска. Если она сейчас работает, то продолжит работать; чтобы и остановить, добавляют ключ --now."
+    },
+    {
+      "id": "sysd-011",
+      "type": "single",
+      "level": "intermediate",
+      "text": "Службу только что установили. Какая команда и запустит её сейчас, и включит автозапуск при загрузке?",
+      "options": [
+        "sudo systemctl start --boot nginx",
+        "sudo systemctl enable --now nginx",
+        "sudo systemctl restart --enable nginx",
+        "sudo systemctl enable nginx",
+        "sudo systemctl start nginx"
+      ],
+      "answer": 1,
+      "explanation": "enable отвечает за автозапуск, start — за текущее состояние; это независимые вещи. Ключ --now объединяет оба действия в одной команде."
+    },
+    {
+      "id": "sysd-012",
+      "type": "single",
+      "level": "intermediate",
+      "text": "Чем systemctl reload отличается от systemctl restart?",
+      "options": [
+        "reload просит службу перечитать настройки без остановки, restart останавливает и запускает её",
+        "reload перечитывает unit-файл службы, restart — её настройки",
+        "reload перезапускает только дочерние процессы, restart — только главный",
+        "reload работает для любых служб, restart — только для сетевых",
+        "reload очищает журнал службы, restart его сохраняет"
+      ],
+      "answer": 0,
+      "explanation": "При reload соединения клиентов не рвутся, но поддерживают его не все службы. Если не уверены, есть systemctl reload-or-restart."
+    },
+    {
+      "id": "sysd-013",
+      "type": "single",
+      "level": "intermediate",
+      "text": "В каком каталоге администратору следует размещать собственные unit-файлы?",
+      "options": [
+        "/usr/lib/systemd/system",
+        "/var/lib/systemd",
+        "/etc/init.d",
+        "/etc/systemd/system",
+        "/run/systemd/system"
+      ],
+      "answer": 3,
+      "explanation": "/etc/systemd/system принадлежит администратору и имеет приоритет. В /usr/lib/systemd/system лежат файлы из пакетов: правки там затрёт обновление. /run предназначен для временных юнитов."
+    },
+    {
+      "id": "sysd-014",
+      "type": "single",
+      "level": "intermediate",
+      "text": "Unit-файл службы отредактировали, но systemd продолжает использовать старую версию. Какой команды не хватает?",
+      "code": "Warning: The unit file, source configuration file or drop-ins of app.service changed on disk.",
+      "options": [
+        "sudo systemctl reload app",
+        "sudo systemctl enable app",
+        "sudo systemctl daemon-reload",
+        "sudo systemctl reset-failed",
+        "sudo systemctl isolate app"
+      ],
+      "answer": 2,
+      "explanation": "systemd держит unit-файлы в памяти. daemon-reload заставляет перечитать их с диска; после этого службу перезапускают, чтобы изменения подействовали."
+    },
+    {
+      "id": "sysd-015",
+      "type": "single",
+      "level": "intermediate",
+      "text": "Какая команда выведет список служб, завершившихся с ошибкой?",
+      "options": ["systemctl --errors", "systemctl list-broken", "journalctl --failed", "systemctl status --all", "systemctl --failed"],
+      "answer": 4,
+      "explanation": "systemctl --failed показывает юниты в состоянии failed. Это первое, что стоит посмотреть после загрузки, если что-то не работает."
+    },
+    {
+      "id": "sysd-016",
+      "type": "single",
+      "level": "intermediate",
+      "text": "Какая директива в unit-файле задаёт команду, которой запускается служба?",
+      "code": "[Service]\n___=/usr/bin/python3 /opt/app/server.py",
+      "options": ["ExecStart", "RunCommand", "StartWith", "Command", "ExecMain"],
+      "answer": 0,
+      "explanation": "ExecStart указывает программу и её аргументы, путь должен быть абсолютным. Рядом бывают ExecStartPre, ExecReload и ExecStop для сопутствующих действий."
+    },
+    {
+      "id": "sysd-017",
+      "type": "single",
+      "level": "intermediate",
+      "text": "Что даёт эта директива в unit-файле?",
+      "code": "[Service]\nRestart=on-failure\nRestartSec=5",
+      "options": [
+        "Перезапускает службу каждые пять секунд",
+        "Перезапускает службу после каждого изменения её настроек",
+        "Запускает службу через пять секунд после загрузки системы",
+        "Перезапускает службу через пять секунд, если она завершилась с ошибкой",
+        "Останавливает службу после пяти неудачных запросов"
+      ],
+      "answer": 3,
+      "explanation": "on-failure срабатывает при ненулевом коде завершения, гибели от сигнала или превышении времени. При штатной остановке через systemctl stop перезапуска не будет."
+    },
+    {
+      "id": "sysd-018",
+      "type": "single",
+      "level": "intermediate",
+      "text": "Какая цель (target) systemd соответствует обычной работе сервера без графической оболочки?",
+      "options": ["graphical.target", "multi-user.target", "rescue.target", "poweroff.target", "network.target"],
+      "answer": 1,
+      "explanation": "multi-user.target — полноценная многопользовательская система с сетью, но без графики. graphical.target добавляет к ней графический вход, rescue.target — режим восстановления."
+    },
+    {
+      "id": "sysd-019",
+      "type": "single",
+      "level": "intermediate",
+      "text": "Чем systemctl mask сильнее, чем systemctl disable?",
+      "options": [
+        "mask удаляет unit-файл службы с диска без возможности возврата",
+        "mask останавливает и саму службу, и все зависящие от неё службы",
+        "mask делает запуск службы невозможным вообще: ни вручную, ни по зависимости",
+        "mask сохраняет запрет даже после переустановки пакета службы",
+        "mask запрещает читать журнал службы обычным пользователям"
+      ],
+      "answer": 2,
+      "explanation": "disable убирает только автозапуск: службу всё ещё можно запустить вручную, или её потянет другая служба. mask подменяет юнит ссылкой на /dev/null; отменяет это unmask."
+    },
+    {
+      "id": "sysd-020",
+      "type": "single",
+      "level": "intermediate",
+      "text": "Нужно изменить одну директиву в службе, установленной из пакета. Почему лучше использовать systemctl edit, а не править файл в /usr/lib/systemd/system?",
+      "code": "sudo systemctl edit nginx",
+      "options": [
+        "Правка исходного файла подействует только после перезагрузки системы",
+        "systemctl edit применяет изменения сразу, без перезапуска службы",
+        "Файлы в /usr/lib/systemd/system недоступны для записи даже root",
+        "systemctl edit заодно проверяет unit-файл службы на уязвимости",
+        "Команда создаёт файл с дополнениями, который не затрётся при обновлении пакета"
+      ],
+      "answer": 4,
+      "explanation": "Дополнение ложится в /etc/systemd/system/nginx.service.d/override.conf и накладывается поверх исходного юнита. Итог со всеми дополнениями показывает systemctl cat nginx."
+    },
+    {
+      "id": "sysd-021",
+      "type": "single",
+      "level": "advanced",
+      "text": "Служба стартует и сразу переходит в inactive, хотя сама программа продолжает работать в фоне. В чём причина?",
+      "code": "[Service]\nExecStart=/opt/legacy/daemon --background",
+      "options": [
+        "Программа сама уходит в фон, а systemd по умолчанию ждёт, что запущенный процесс останется главным",
+        "В unit-файле не указан пользователь, от имени которого запускать службу",
+        "Службе не хватает директивы Restart=always",
+        "Программа запускается раньше, чем монтируются файловые системы",
+        "systemd не умеет работать с программами, не написанными специально для него"
+      ],
+      "answer": 0,
+      "explanation": "При Type=simple завершение запущенного процесса означает конец службы, а «демонизирующаяся» программа именно завершает исходный процесс. Нужно либо убрать --background, либо указать Type=forking и PIDFile."
+    },
+    {
+      "id": "sysd-022",
+      "type": "single",
+      "level": "advanced",
+      "text": "Что гарантирует такая запись в unit-файле приложения?",
+      "code": "[Unit]\nAfter=postgresql.service",
+      "options": [
+        "PostgreSQL будет запущен автоматически вместе с приложением",
+        "Приложение остановится, если остановится PostgreSQL",
+        "Приложение запустится только после полной готовности базы к запросам",
+        "Только порядок: если запускаются обе службы, приложение стартует после PostgreSQL",
+        "Приложение не запустится, если PostgreSQL не установлен"
+      ],
+      "answer": 3,
+      "explanation": "After задаёт очерёдность, но никого не запускает. Зависимость выражают Wants или Requires, и обычно их пишут вместе с After. Готовность базы к запросам порядок запуска тоже не гарантирует."
+    },
+    {
+      "id": "sysd-023",
+      "type": "single",
+      "level": "advanced",
+      "text": "Что даёт строка Persistent=true в таймере?",
+      "code": "[Timer]\nOnCalendar=daily\nPersistent=true",
+      "options": [
+        "Таймер продолжает работать после отключения командой disable",
+        "Задание выполняется непрерывно, без пауз между запусками",
+        "Если компьютер был выключен в момент запуска, задание выполнится после включения",
+        "Результаты каждого запуска сохраняются в отдельный файл",
+        "Таймер нельзя остановить без перезагрузки"
+      ],
+      "answer": 2,
+      "explanation": "systemd запоминает время последнего срабатывания и навёрстывает пропущенный запуск. У cron такого нет: пропущенное из-за выключения задание просто не выполняется."
+    },
+    {
+      "id": "sysd-024",
+      "type": "single",
+      "level": "advanced",
+      "text": "Система стала загружаться заметно дольше. Какая команда покажет, какие службы дольше всего запускались?",
+      "options": [
+        "systemctl list-jobs",
+        "systemd-analyze blame",
+        "journalctl --slow",
+        "systemctl status --boot",
+        "systemd-analyze verify"
+      ],
+      "answer": 1,
+      "explanation": "blame выводит службы по убыванию времени запуска. Цепочку, которая реально задержала загрузку, точнее показывает systemd-analyze critical-chain: параллельные запуски в ней не складываются."
+    },
+    {
+      "id": "sysd-025",
+      "type": "single",
+      "level": "advanced",
+      "text": "Как не дать службе занять больше 500 МБ оперативной памяти?",
+      "options": [
+        "Добавить в раздел [Unit] строку LimitRAM=500M",
+        "Запустить службу командой nice -n 19",
+        "Указать в ExecStart ключ --memory=500M",
+        "Добавить в раздел [Install] строку MaxMemory=500M",
+        "Добавить в раздел [Service] строку MemoryMax=500M"
+      ],
+      "answer": 4,
+      "explanation": "systemd помещает каждую службу в свою группу cgroup и умеет ограничивать её: MemoryMax — память, CPUQuota — долю процессора. При превышении лимита памяти процесс службы завершит ядро."
+    },
+    {
+      "id": "sysd-026",
+      "type": "single",
+      "level": "advanced",
+      "text": "Что делает эта директива в unit-файле?",
+      "code": "[Service]\nProtectSystem=strict\nReadWritePaths=/var/lib/app",
+      "options": [
+        "Оставляет службе всю файловую систему только на чтение, кроме /var/lib/app",
+        "Шифрует файлы службы в каталоге /var/lib/app ключом системы",
+        "Запрещает всем остальным службам читать каталог /var/lib/app",
+        "Делает резервную копию /var/lib/app перед каждым запуском",
+        "Запускает службу только при наличии каталога /var/lib/app"
+      ],
+      "answer": 0,
+      "explanation": "Это одна из директив изоляции: даже взломанная служба не сможет изменить системные файлы. Оценку защищённости юнита и подсказки даёт systemd-analyze security."
+    },
+    {
+      "id": "sysd-027",
+      "type": "single",
+      "level": "advanced",
+      "text": "Служба с Restart=always перестала перезапускаться, в журнале такая запись. Что произошло?",
+      "code": "app.service: Start request repeated too quickly.\napp.service: Failed with result 'exit-code'.",
+      "options": [
+        "Служба запущена дважды, и второй экземпляр отклонён",
+        "Директива Restart=always работает только до первой перезагрузки",
+        "Системе не хватило памяти для очередного запуска",
+        "Служба падала слишком часто, и systemd прекратил попытки перезапуска",
+        "Unit-файл изменили во время работы службы"
+      ],
+      "answer": 3,
+      "explanation": "По умолчанию больше пяти запусков за десять секунд считаются зацикливанием. Сработал предел перезапусков. Счётчик сбрасывает systemctl reset-failed; сам предел задают StartLimitBurst и StartLimitIntervalSec, а паузу между попытками — RestartSec."
+    },
+    {
+      "id": "sysd-028",
+      "type": "single",
+      "level": "advanced",
+      "text": "Что такое активация по сокету?",
+      "code": "sudo systemctl enable --now app.socket",
+      "options": [
+        "Служба запускается только после входа администратора по сети",
+        "Служба передаёт свои журналы на удалённый сервер",
+        "systemd сам слушает порт и запускает службу при первом подключении к нему",
+        "Служба запускается одновременно на всех сетевых интерфейсах",
+        "systemd проверяет порт службы и перезапускает её, если он не отвечает"
+      ],
+      "answer": 2,
+      "explanation": "Порт открыт с самого начала, а процесс службы появляется только при обращении. Это экономит ресурсы для редко используемых служб и позволяет перезапускать службу, не теряя входящие соединения."
+    },
+    {
+      "id": "sysd-029",
+      "type": "single",
+      "level": "advanced",
+      "text": "Служба пользователя, запущенная через systemctl --user, останавливается, как только он выходит из системы. Как оставить её работать?",
+      "options": [
+        "Запустить её заново командой systemctl --user --global start",
+        "Включить для пользователя «задержку»: loginctl enable-linger anna",
+        "Добавить в unit-файл службы строку Restart=always и перезапустить",
+        "Перенести unit-файл службы из домашнего каталога в /etc/init.d",
+        "Добавить пользователя в группу systemd-journal и перезайти"
+      ],
+      "answer": 1,
+      "explanation": "Экземпляр systemd пользователя живёт, пока у того есть сеансы. Linger оставляет его работать постоянно и запускает при загрузке системы, без входа пользователя."
+    },
+    {
+      "id": "sysd-030",
+      "type": "single",
+      "level": "advanced",
+      "text": "Приложение работает при запуске из терминала, но как служба не видит переменную DATABASE_URL, заданную в ~/.bashrc. Как передать её правильно?",
+      "options": [
+        "Добавить в unit-файл строку Shell=/bin/bash для чтения ~/.bashrc",
+        "Выполнить export DATABASE_URL в терминале перед systemctl start",
+        "Переименовать ~/.bashrc в ~/.profile, который читает systemd",
+        "Запустить службу командой systemctl start --env DATABASE_URL",
+        "Задать её в unit-файле через Environment= или EnvironmentFile="
+      ],
+      "answer": 4,
+      "explanation": "Службы запускает systemd, а не оболочка: файлы вроде ~/.bashrc не читаются, а окружение терминала не наследуется. Секреты удобнее держать в отдельном файле с правами 600 и подключать через EnvironmentFile."
+    }
+  ]
+}

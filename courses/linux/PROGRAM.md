@@ -11,10 +11,10 @@
 | 5 | `05-processes.json` | Процессы и задания | ps, top, сигналы и kill, фоновые задания, приоритеты, /proc, зомби и сироты | готов: 10 / 10 / 10 |
 | 6 | `06-users.json` | Пользователи и группы | /etc/passwd и /etc/shadow, useradd и usermod, группы, su и sudo, sudoers, PAM, политика паролей | готов: 10 / 10 / 10 |
 | 7 | `07-packages.json` | Пакеты и программы | apt и dpkg, dnf и rpm, репозитории и ключи, зависимости, сборка из исходников, snap и flatpak | готов: 10 / 10 / 10 |
-| 8 | `08-storage.json` | Диски и файловые системы | Разделы, mkfs, mount и fstab, ext4, xfs, btrfs, LVM, RAID, подкачка, fsck, квоты | — |
+| 8 | `08-storage.json` | Диски и файловые системы | Разделы, mkfs, mount и fstab, ext4, xfs, btrfs, LVM, RAID, подкачка, fsck, квоты | готов: 10 / 10 / 10 |
 | 9 | `09-network.json` | Сеть | Адреса и интерфейсы, DNS и DHCP, маршруты, порты, диагностика; далее — настройка, мосты и VLAN, tcpdump | базовый: 25, остальные — нет |
-| 10 | `10-ssh.json` | SSH и удалённая работа | Ключи и агент, ~/.ssh/config, scp, sftp и rsync, туннели и проброс портов, настройка sshd | — |
-| 11 | `11-systemd.json` | systemd и службы | systemctl, юниты и зависимости, цели, таймеры, сокеты, ограничения ресурсов | — |
+| 10 | `10-ssh.json` | SSH и удалённая работа | Ключи и агент, ~/.ssh/config, scp, sftp и rsync, туннели и проброс портов, настройка sshd | готов: 10 / 10 / 10 |
+| 11 | `11-systemd.json` | systemd и службы | systemctl, юниты и зависимости, цели, таймеры, сокеты, ограничения ресурсов | готов: 10 / 10 / 10 |
 | 12 | `12-boot.json` | Загрузка системы и ядро | BIOS и UEFI, GRUB, initramfs, параметры ядра, модули, sysctl, dmesg, режим восстановления | — |
 | 13 | `13-logs.json` | Журналы и мониторинг | journalctl, rsyslog, logrotate, free, vmstat, iostat, sar, оповещения | — |
 | 14 | `14-bash.json` | Скрипты на Bash | Переменные и массивы, условия и циклы, функции, аргументы, коды возврата, set -euo pipefail, trap, отладка | — |
