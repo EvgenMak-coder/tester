@@ -95,6 +95,16 @@ describe('формат курса', () => {
     }
   })
 
+  it('в курсе Linux у каждого неверного варианта есть разбор, у каждого модуля — план теории на три уровня', () => {
+    const linux = catalog.find((entry) => entry.source === 'linux')!.result
+    if (!linux.ok) throw new Error(linux.errors.join('; '))
+    for (const topic of linux.course.topics) {
+      const bare = topic.questions.filter((q) => q.options.some((_, i) => i !== q.answer && !q.notes?.[i])).map((q) => q.id)
+      expect([topic.id, bare]).toEqual([topic.id, []])
+      expect([topic.id, ...['basic', 'intermediate', 'advanced'].map((l) => (topic.theory?.[l as 'basic']?.plan?.length ?? 0) >= 3)]).toEqual([topic.id, true, true, true])
+    }
+  })
+
   it('сообщает об ошибках в папке курса', () => {
     const header = JSON.stringify({ format: 'tester-course', version: 1, course: { id: 'c1', title: 'Курс' } })
     const topic = JSON.stringify({ id: 't1', title: 'Тема', questions: [question('q1')] })
@@ -114,6 +124,26 @@ describe('формат курса', () => {
     expect(isOutdated(installed, parsed())).toBe(false)
     expect(isOutdated(installed, { ...parsed(), title: 'Курс, издание второе' })).toBe(true)
     expect(isOutdated(installed, parsed(file([{ id: 't1', title: 'Тема 1', questions: [question('q1'), question('q2'), question('q3')] }])))).toBe(true)
+  })
+
+  it('читает разбор вариантов и требует по строке на вариант', () => {
+    const notes = ['про a', 'про b', '', 'про d', 'про e']
+    expect(parsed(file([{ id: 't1', title: 'Тема', questions: [question('q1', { notes })] }])).topics[0].questions[0].notes).toEqual(notes)
+    // разбор из одних пустых строк не хранится
+    expect(parsed(file([{ id: 't1', title: 'Тема', questions: [question('q1', { notes: ['', '', '', '', ''] })] }])).topics[0].questions[0].notes).toBeUndefined()
+    expect(errorsOf(file([{ id: 't1', title: 'Тема', questions: [question('q1', { notes: ['только один'] })] }]))).toEqual(['topics[0].questions[0].notes: разборов 1, а вариантов 5'])
+    expect(errorsOf(file([{ id: 't1', title: 'Тема', questions: [question('q1', { notes: 'текст' })] }]))).toEqual(['topics[0].questions[0].notes: нужен список строк, по одной на вариант ответа'])
+  })
+
+  it('читает теорию модуля по уровням', () => {
+    const topic = (theory: unknown) => file([{ id: 't1', title: 'Тема', theory, questions: [question('q1')] }])
+    expect(parsed(topic({ basic: { plan: ['Пути', ' Каталоги '] }, advanced: { plan: [], text: '# Заголовок' }, intermediate: {} })).topics[0].theory).toEqual({
+      basic: { plan: ['Пути', 'Каталоги'] },
+      advanced: { text: '# Заголовок' },
+    })
+    expect(parsed(topic({})).topics[0].theory).toBeUndefined()
+    expect(errorsOf(topic({ expert: { plan: ['x'] } }))).toEqual(['topics[0].theory.expert: уровень должен быть одним из: basic, intermediate, advanced'])
+    expect(errorsOf(topic({ basic: { plan: 'x' } }))).toEqual(['topics[0].theory.basic.plan: нужен список непустых строк'])
   })
 
   it('принимает текст с BOM и обёрткой из чата', () => {

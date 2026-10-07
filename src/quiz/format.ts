@@ -1,4 +1,4 @@
-import { LEVELS, type CourseFile, type Level, type Question, type Topic } from './types'
+import { LEVELS, type CourseFile, type Lesson, type Level, type Question, type Theory, type Topic } from './types'
 
 export type ParseResult = { ok: true; course: CourseFile } | { ok: false; errors: string[] }
 
@@ -82,6 +82,13 @@ function readQuestion(raw: unknown, path: string, report: Report, seen: Set<stri
   if (level !== undefined && !LEVELS.includes(level as Level)) report(`${path}.level`, `уровень должен быть одним из: ${LEVELS.join(', ')}`)
   const code = readOptionalText(raw, 'code', path, report)
   const explanation = readOptionalText(raw, 'explanation', path, report)
+  const notes = raw.notes
+  let notesOk = false
+  if (notes !== undefined && notes !== null) {
+    if (!Array.isArray(notes) || !notes.every((n) => typeof n === 'string')) report(`${path}.notes`, 'нужен список строк, по одной на вариант ответа')
+    else if (optionsOk && notes.length !== (options as unknown[]).length) report(`${path}.notes`, `разборов ${notes.length}, а вариантов ${(options as unknown[]).length}`)
+    else notesOk = notes.some((n) => n.trim() !== '')
+  }
 
   const question: Question = {
     id: id ?? '',
@@ -92,10 +99,40 @@ function readQuestion(raw: unknown, path: string, report: Report, seen: Set<stri
   }
   if (code !== undefined) question.code = code
   if (explanation !== undefined) question.explanation = explanation
+  if (notesOk) question.notes = (notes as string[]).map((n) => n.trim())
   if (raw.shuffle === false) question.shuffle = false
   // базовый уровень — значение по умолчанию, отдельно его не храним
   if (level !== undefined && level !== 'basic') question.level = level as Level
   return question
+}
+
+function readTheory(raw: unknown, path: string, report: Report): Theory | undefined {
+  if (raw === undefined || raw === null) return undefined
+  if (!isObject(raw)) {
+    report(path, 'нужен объект с разделами basic, intermediate, advanced')
+    return undefined
+  }
+  const theory: Theory = {}
+  for (const key of Object.keys(raw)) {
+    if (!LEVELS.includes(key as Level)) report(`${path}.${key}`, `уровень должен быть одним из: ${LEVELS.join(', ')}`)
+  }
+  for (const level of LEVELS) {
+    const part = raw[level]
+    if (part === undefined || part === null) continue
+    if (!isObject(part)) {
+      report(`${path}.${level}`, 'нужен объект с полями plan и text')
+      continue
+    }
+    const lesson: Lesson = {}
+    if (part.plan !== undefined && part.plan !== null) {
+      if (!Array.isArray(part.plan) || !part.plan.every(isText)) report(`${path}.${level}.plan`, 'нужен список непустых строк')
+      else if (part.plan.length > 0) lesson.plan = part.plan.map((p) => p.trim())
+    }
+    const text = readOptionalText(part, 'text', `${path}.${level}`, report)
+    if (text !== undefined) lesson.text = text
+    if (lesson.plan || lesson.text) theory[level] = lesson
+  }
+  return Object.keys(theory).length > 0 ? theory : undefined
 }
 
 function readTopic(raw: unknown, path: string, report: Report, topicIds: Set<string>, questionIds: Set<string>): Topic | null {
@@ -123,6 +160,8 @@ function readTopic(raw: unknown, path: string, report: Report, topicIds: Set<str
   if (description !== undefined) topic.description = description
   const icon = readOptionalText(raw, 'icon', path, report)
   if (icon !== undefined) topic.icon = icon
+  const theory = readTheory(raw.theory, `${path}.theory`, report)
+  if (theory !== undefined) topic.theory = theory
   return topic
 }
 

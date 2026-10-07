@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { coursePath } from '../../app/paths'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { coursePath, theoryPath } from '../../app/paths'
 import { dateTime, duration, MISTAKES, plural, QUESTIONS, wordFor } from '../../app/text'
 import { hueClass, ModuleIcon } from '../../components/ModuleIcon'
 import { Page, Segmented, Stat } from '../../components/ui'
@@ -67,6 +67,8 @@ export function TestsPage() {
     setLevel(next)
   }
 
+  const lessons = LEVELS.filter((l) => (active === 'all' || active === l) && topic?.theory?.[l]).map((l) => ({ level: l, lesson: topic!.theory![l]! }))
+
   const counts = [...PRACTICE_COUNTS.filter((n) => n < scope.total).map((n) => ({ value: n, label: String(n) })), { value: ALL, label: `Все ${scope.total}` }]
   const count = counts.some((c) => c.value === practiceCount) ? practiceCount : ALL
 
@@ -99,6 +101,28 @@ export function TestsPage() {
         <Stat value={scope.due} label="к повторению" />
         <Stat value={scope.mistakes} label={wordFor(scope.mistakes, MISTAKES)} />
       </div>
+
+      {lessons.length > 0 && (
+        <>
+          <h2>Теория</h2>
+          <div className="lessons">
+            {lessons.map(({ level: l, lesson }) => (
+              <div className="card lesson" key={l}>
+                <div className="row between">
+                  <span className="badge accent">{LEVEL_TITLES[l]}</span>
+                  {!lesson.text && <span className="badge">готовится</span>}
+                </div>
+                {lesson.plan && <ul className="plan">{lesson.plan.map((point) => <li key={point}>{point}</li>)}</ul>}
+                {lesson.text && (
+                  <Link className="btn" to={theoryPath(course.id, topic!.id, l)}>
+                    Читать
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <h2>Тесты</h2>
       <div className="modes">

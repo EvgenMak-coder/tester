@@ -5,7 +5,7 @@ interface Props {
   /** исходные индексы вариантов в порядке показа */
   order: number[]
   picked: number | null
-  /** показать верный ответ и пояснение */
+  /** показать верный ответ, разбор вариантов и пояснение */
   reveal: boolean
   topic?: string
   level?: string
@@ -31,7 +31,10 @@ export function QuestionView({ question, order, picked, reveal, topic, level, on
             <li key={original}>
               <button type="button" className={`option ${state}`} disabled={!onPick} aria-pressed={original === picked} onClick={() => onPick?.(original)}>
                 <span className="option-key">{state === 'correct' ? '✓' : state === 'wrong' ? '✕' : i + 1}</span>
-                <span className="option-text">{question.options[original]}</span>
+                <span className="option-body">
+                  <span className="option-text">{question.options[original]}</span>
+                  {reveal && question.notes?.[original] && <span className="option-note">{question.notes[original]}</span>}
+                </span>
               </button>
             </li>
           )

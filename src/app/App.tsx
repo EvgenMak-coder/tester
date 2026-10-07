@@ -3,6 +3,7 @@ import { Layout } from './Layout'
 import { useSnapshot } from '../data/hooks'
 import { CoursePage } from '../features/course/CoursePage'
 import { TestsPage } from '../features/course/TestsPage'
+import { TheoryPage } from '../features/course/TheoryPage'
 import { HomePage } from '../features/home/HomePage'
 import { ImportPage } from '../features/import/ImportPage'
 import { ResultPage } from '../features/run/ResultPage'
@@ -19,6 +20,7 @@ export function App() {
         <Route path="/course/:id" element={<CoursePage />} />
         <Route path="/course/:id/all" element={<TestsPage />} />
         <Route path="/course/:id/module/:topicId" element={<TestsPage />} />
+        <Route path="/course/:id/module/:topicId/theory/:level" element={<TheoryPage />} />
         <Route path="/run" element={<RunPage />} />
         <Route path="/result" element={<ResultPage />} />
         <Route path="/import" element={<ImportPage />} />

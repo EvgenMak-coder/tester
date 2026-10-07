@@ -978,3 +978,97 @@ pre.code {
     flex: 1;
   }
 }
+
+/* разбор варианта: появляется под его текстом после ответа */
+.option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.option-note {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.option.correct .option-note {
+  color: var(--text);
+}
+
+/* с разбором приглушается только текст варианта, сам разбор читается полностью */
+.option.dim:has(.option-note) {
+  opacity: 1;
+}
+
+.option.dim:has(.option-note) .option-text,
+.option.dim:has(.option-note) .option-key {
+  opacity: 0.6;
+}
+
+/* теория модуля */
+.lessons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.lesson {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lesson .btn {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.plan {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.plan li + li {
+  margin-top: 4px;
+}
+
+.prose {
+  max-width: 72ch;
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  margin: 1.4em 0 0.4em;
+}
+
+.prose p,
+.prose ul,
+.prose ol,
+.prose pre,
+.prose blockquote {
+  margin: 0 0 0.9em;
+}
+
+.prose li + li {
+  margin-top: 4px;
+}
+
+.prose code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  font: 0.9em var(--mono);
+}
+
+.prose blockquote {
+  padding: 10px 14px;
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+}

@@ -17,6 +17,8 @@ export interface SingleQuestion {
   options: string[]
   answer: number
   explanation?: string
+  /** разбор каждого варианта, по строке на вариант в порядке `options`; пустая строка — без разбора */
+  notes?: string[]
   /** false — варианты показываются в порядке файла */
   shuffle?: boolean
   /** нет поля — базовый уровень */
@@ -30,6 +32,16 @@ export function levelOf(question: Question): Level {
   return question.level ?? 'basic'
 }
 
+/** Теория одного уровня модуля: план раздела и, когда он написан, сам текст. */
+export interface Lesson {
+  /** о чём раздел, по пункту на строку */
+  plan?: string[]
+  /** текст раздела в Markdown */
+  text?: string
+}
+
+export type Theory = Partial<Record<Level, Lesson>>
+
 /** Тема курса; в приложении называется модулем. */
 export interface Topic {
   id: string
@@ -37,6 +49,7 @@ export interface Topic {
   description?: string
   /** имя значка модуля, список — в components/ModuleIcon.tsx */
   icon?: string
+  theory?: Theory
   questions: Question[]
 }
 
