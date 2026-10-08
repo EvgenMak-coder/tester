@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseMarkdown, splitInline } from '../app/markdown'
 import demoText from '../../courses/linux-demo.json?raw'
+import guide from '../../docs/COURSE-GUIDE.md?raw'
 import { assembleCatalog, isOutdated } from '../features/import/builtin'
 import { finishSession, importCourse, readBackup, submitAnswer } from '../data/actions'
 import { MemoryStore } from '../data/localStore'
@@ -183,6 +184,18 @@ describe('формат курса', () => {
     expect(parsed(topic({})).topics[0].theory).toBeUndefined()
     expect(errorsOf(topic({ expert: { plan: ['x'] } }))).toEqual(['topics[0].theory.expert: уровень должен быть одним из: basic, intermediate, advanced'])
     expect(errorsOf(topic({ basic: { plan: 'x' } }))).toEqual(['topics[0].theory.basic.plan: нужен список непустых строк'])
+  })
+
+  it('пример из инструкции для авторов курсов проходит проверку', () => {
+    // первый блок ```json в инструкции — полный пример курса
+    const start = guide.indexOf('```json\n{\n  "format"')
+    const example = guide.slice(start, guide.indexOf('\n```\n', start) + 5)
+    const result = parseCourseText(example)
+    if (!result.ok) throw new Error(result.errors.join('; '))
+    const [topic] = result.course.topics
+    expect(topic.questions.map(levelOf)).toEqual(['basic', 'intermediate', 'advanced'])
+    expect(topic.questions.every((q) => q.notes?.length === q.options.length && q.notes[q.answer] === '')).toBe(true)
+    expect(parseMarkdown(topic.theory?.basic?.text ?? '').map((b) => b.kind)).toEqual(['heading', 'paragraph', 'code', 'quote', 'heading', 'list'])
   })
 
   it('принимает текст с BOM и обёрткой из чата', () => {

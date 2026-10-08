@@ -56,9 +56,17 @@ export function ImportPage() {
   }
 
   const copyFormat = async () => {
-    const { default: format } = await import('../../../docs/FORMAT.md?raw')
-    await navigator.clipboard.writeText(format)
+    const { default: guide } = await import('../../../docs/COURSE-GUIDE.md?raw')
+    await navigator.clipboard.writeText(guide)
     setCopied(true)
+  }
+
+  const downloadGuide = async () => {
+    const { default: guide } = await import('../../../docs/COURSE-GUIDE.md?raw')
+    const url = URL.createObjectURL(new Blob([guide], { type: 'text/markdown;charset=utf-8' }))
+    const link = Object.assign(document.createElement('a'), { href: url, download: 'tester-course-guide.md' })
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -137,11 +145,14 @@ export function ImportPage() {
       <div className="card stack">
         <h2>Где взять файл</h2>
         <p className="small">
-          Скопируй описание формата и отправь его ИИ вместе с конспектом или названием темы — в ответ получишь готовый JSON. В описании есть пример, правила и образец запроса.
+          Курс составит ИИ-ассистент. Отдай ему инструкцию и назови предмет — он предложит программу, напишет тесты трёх уровней с разбором ответов и теорию, а готовый файл ты импортируешь здесь.
         </p>
         <div className="row">
           <button type="button" className="btn" onClick={() => void copyFormat()}>
-            {copied ? 'Скопировано ✓' : 'Скопировать описание формата'}
+            {copied ? 'Скопировано ✓' : 'Скопировать инструкцию'}
+          </button>
+          <button type="button" className="btn" onClick={() => void downloadGuide()}>
+            Скачать файлом
           </button>
         </div>
       </div>
