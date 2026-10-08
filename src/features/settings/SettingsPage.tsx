@@ -88,6 +88,7 @@ export function SettingsPage() {
               <p className="small">
                 Вход выполнен: <b>{sync.email}</b>. Курсы и прогресс синхронизируются между устройствами, где ты вошёл.
               </p>
+              <p className="muted small">Добавленные тобой курсы видит владелец приложения. Прогресс, ошибки и результаты тестов видишь только ты.</p>
               <p className={sync.phase === 'error' ? 'notice bad' : 'muted small'} role="status">
                 {sync.phase === 'syncing'
                   ? 'Синхронизация…'
@@ -108,7 +109,9 @@ export function SettingsPage() {
             </>
           ) : (
             <>
-              <p className="small">Войди, чтобы курсы и прогресс были одинаковыми на телефоне и компьютере. Без входа всё работает как раньше, данные остаются на этом устройстве.</p>
+              <p className="small">
+                Войди, чтобы курсы и прогресс были одинаковыми на телефоне и компьютере. Без входа всё работает как раньше, данные остаются на этом устройстве. Курсы, добавленные под аккаунтом, видит владелец приложения; прогресс и ошибки остаются личными.
+              </p>
               <form className="login" onSubmit={(e) => void login(e)}>
                 <input type="email" placeholder="Почта" aria-label="Почта" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
                 <input type="password" placeholder="Пароль" aria-label="Пароль" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />

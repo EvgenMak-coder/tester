@@ -1,11 +1,12 @@
 import { useRef, useState, type DragEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Catalog } from './Catalog'
+import { SharedCourses } from './SharedCourses'
 import { plural, QUESTIONS, MODULES } from '../../app/text'
 import { Page } from '../../components/ui'
 import { importCourse } from '../../data/actions'
 import { act, useData } from '../../data/hooks'
-import { countQuestions, diffCourse, parseCourseText, type ParseResult } from '../../quiz/format'
+import { countQuestions, diffCourse, parseCourse, parseCourseText, type ParseResult } from '../../quiz/format'
 import { levelCounts } from '../../quiz/stats'
 import { LEVEL_TITLES, LEVELS } from '../../quiz/types'
 
@@ -22,6 +23,13 @@ export function ImportPage() {
   const check = (content: string, from: string | null) => {
     setSource(from)
     setResult(parseCourseText(content))
+  }
+
+  // курс другого пользователя проходит ту же проверку и то же подтверждение, что и файл
+  const openShared = (file: unknown, from: string) => {
+    setSource(from)
+    setResult(parseCourse(file))
+    window.scrollTo(0, 0)
   }
 
   const readFile = async (file: File | undefined) => {
@@ -141,6 +149,8 @@ export function ImportPage() {
       )}
 
       <Catalog />
+
+      <SharedCourses onOpen={openShared} />
 
       <div className="card stack">
         <h2>Где взять файл</h2>

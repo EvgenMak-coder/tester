@@ -224,6 +224,16 @@ export function parseCourseText(text: string): ParseResult {
   return parseCourse(raw)
 }
 
+/**
+ * Сохранённый курс в виде файла курса — того, что принимает parseCourse.
+ * Нужен, когда курс приходит не из файла, а из чужих данных, и его надо проверить заново.
+ */
+export function toCourseFile(course: unknown): unknown {
+  if (!isObject(course)) return course
+  const { id, title, description, topics } = course
+  return { format: FORMAT, version: VERSION, course: { id, title, description }, topics }
+}
+
 export interface CourseDiff {
   added: number
   changed: number

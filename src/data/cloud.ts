@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Changes } from './merge'
 import type { Remote } from './sync'
+import { toCourseFile } from '../quiz/format'
 import type { Attempt, Course, Level, Mode } from '../quiz/types'
 
 const url = import.meta.env.VITE_SUPABASE_URL
@@ -163,4 +164,58 @@ export class SupabaseRemote implements Remote {
       for (const { error } of stale) if (error) throw fail(error)
     }
   }
+}
+
+/** Курс другого пользователя, каким его видит владелец приложения: без содержимого. */
+export interface SharedCourse {
+  ownerId: string
+  ownerEmail: string
+  courseId: string
+  title: string
+  modules: number
+  questions: number
+  updatedAt: string
+}
+
+interface SharedRow {
+  owner_id: string
+  owner_email: string
+  course_id: string
+  title: string | null
+  modules: number
+  questions: number
+  updated_at: string
+}
+
+/**
+ * Курсы остальных пользователей. Видны только владельцу приложения: остальным база отвечает пусто.
+ * null — смотреть нечего: вход не выполнен или пользователь не владелец.
+ */
+export async function loadSharedCourses(): Promise<SharedCourse[] | null> {
+  if (!supabase) return null
+  const { data: session } = await supabase.auth.getSession()
+  if (!session.session) return null
+  const admin = await supabase.rpc('is_admin')
+  if (admin.error) throw fail(admin.error)
+  if (admin.data !== true) return null
+  const { data, error } = await supabase.rpc('shared_courses')
+  if (error) throw fail(error)
+  return ((data ?? []) as SharedRow[]).map((r) => ({
+    ownerId: r.owner_id,
+    ownerEmail: r.owner_email,
+    courseId: r.course_id,
+    title: r.title ?? r.course_id,
+    modules: r.modules,
+    questions: r.questions,
+    updatedAt: iso(r.updated_at),
+  }))
+}
+
+/** Содержимое чужого курса в виде файла курса. Это данные другого человека: перед использованием их проверяет parseCourse. */
+export async function loadSharedCourse(ownerId: string, courseId: string): Promise<unknown> {
+  if (!supabase) throw new Error('Синхронизация не настроена')
+  const { data, error } = await supabase.rpc('shared_course', { owner: ownerId, course: courseId })
+  if (error) throw fail(error)
+  if (!data) throw new Error('Курс не найден: возможно, автор его удалил')
+  return toCourseFile(data)
 }

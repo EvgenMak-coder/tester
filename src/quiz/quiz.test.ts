@@ -5,7 +5,7 @@ import guide from '../../docs/COURSE-GUIDE.md?raw'
 import { assembleCatalog, isOutdated } from '../features/import/builtin'
 import { finishSession, importCourse, readBackup, submitAnswer } from '../data/actions'
 import { MemoryStore } from '../data/localStore'
-import { countQuestions, diffCourse, parseCourse, parseCourseText } from './format'
+import { countQuestions, diffCourse, parseCourse, parseCourseText, toCourseFile } from './format'
 import { createSession, pickQuestions, questionMap, score, secondsLeft, shuffled, toAttempt, trimToAnswered, withAnswer, type Rng } from './session'
 import { addDays, review, toDay } from './srs'
 import { courseStats, levelCounts } from './stats'
@@ -196,6 +196,15 @@ describe('формат курса', () => {
     expect(topic.questions.map(levelOf)).toEqual(['basic', 'intermediate', 'advanced'])
     expect(topic.questions.every((q) => q.notes?.length === q.options.length && q.notes[q.answer] === '')).toBe(true)
     expect(parseMarkdown(topic.theory?.basic?.text ?? '').map((b) => b.kind)).toEqual(['heading', 'paragraph', 'code', 'quote', 'heading', 'list'])
+  })
+
+  it('сохранённый курс превращается обратно в файл и проходит ту же проверку', () => {
+    const course = parsed(file([{ id: 't1', title: 'Тема', description: 'О теме', theory: { basic: { plan: ['Пути'] } }, questions: [question('q1', { notes: ['a', 'b', '', 'd', 'e'], level: 'advanced' })] }]))
+    const stored = { ...course, importedAt: '2026-10-08T10:00:00.000Z' }
+    expect(parsed(toCourseFile(stored) as object)).toEqual(course)
+    // чужие данные могут оказаться чем угодно: проверка должна ответить ошибкой, а не упасть
+    expect(errorsOf(toCourseFile({ id: 'x', topics: 'нет' }))).toEqual(['course.title: нужно название курса', 'topics: в курсе должна быть хотя бы одна тема'])
+    expect(errorsOf(toCourseFile(null))).toEqual(['Файл должен содержать JSON-объект курса'])
   })
 
   it('принимает текст с BOM и обёрткой из чата', () => {
